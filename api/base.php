@@ -15,13 +15,7 @@ if (!isset($conn) || !$conn) {
   exit;
 }
 
-/**
- * Send a JSON response and exit.
- *
- * @param mixed $data   Data to JSON-encode.
- * @param int   $status HTTP response status code.
- */
-function send_json($data, int $status = 200) {
+function send_json(mixed $data, int $status = 200) {
   header('Content-Type: application/json; charset=utf-8');
   http_response_code($status);
   echo json_encode($data, JSON_UNESCAPED_UNICODE);
@@ -32,11 +26,6 @@ function get_raw_input(): string {
   return file_get_contents('php://input');
 }
 
-/**
- * Read request input as JSON or form data.
- *
- * @return array<string, mixed>
- */
 function get_input(): array {
   $raw = get_raw_input();
   $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
@@ -48,29 +37,11 @@ function get_input(): array {
   return !empty($parsed) ? $parsed : $_POST;
 }
 
-/**
- * Escape a value for safe use in SQL queries.
- *
- * @param string|int|float|bool|null $value
- * @return string
- */
-/**
- * Escape a value for safe use in SQL queries.
- *
- * @param string|int|float|bool|null $value
- * @return string
- */
 function escape(string|int|float|bool|null $value): string {
   global $conn;
   return mysqli_real_escape_string($conn, (string) $value);
 }
 
-/**
- * Execute a SELECT query and return all rows.
- *
- * @param string $sql
- * @return array<int, array<string, mixed>>
- */
 function query_fetch_all(string $sql): array {
   global $conn;
   $result = mysqli_query($conn, $sql);
@@ -84,12 +55,6 @@ function query_fetch_all(string $sql): array {
   return $rows;
 }
 
-/**
- * Execute a SELECT query and return a single row.
- *
- * @param string $sql
- * @return array<string, mixed>|null
- */
 function query_fetch_one(string $sql): ?array {
   $rows = query_fetch_all($sql);
   return $rows[0] ?? null;
