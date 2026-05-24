@@ -1,3 +1,14 @@
+const userData = JSON.parse(localStorage.getItem('userData'));
+
+if (!userData) {
+    window.location.href = '/login.html';
+}
+
+if (userData.role === 'mahasiswa') {
+    document.getElementById('menuMahasiswa').style.display = 'none';
+    document.getElementById('menuDosen').style.display = 'none';
+}
+
 const content = document.getElementById('mainContent');
 
 function setActiveMenu(menuId) {
@@ -14,7 +25,8 @@ document.getElementById('menuDashboard').addEventListener('click', function(e) {
             <div class="col-12">
                 <div class="card shadow-sm">
                     <div class="card-body">
-                        <h3>Dashboard Akademik</h3>
+                        <h3>Selamat Datang, ${userData.username}!</h3>
+                        <p>Anda login sebagai: <strong>${userData.role.toUpperCase()}</strong></p>
                     </div>
                 </div>
             </div>
@@ -241,7 +253,13 @@ document.getElementById('menuNilai').addEventListener('click', function(e) {
         </div>
     `;
 
-    fetch('/api/enrollment')
+    let fetchUrl = '/api/enrollment';
+    
+    if (userData.role === 'mahasiswa') {
+        fetchUrl = `/api/enrollment?nim=${userData.username}`;
+    }
+
+    fetch(fetchUrl)
         .then(res => res.json())
         .then(data => {
             const tbody = document.getElementById('tabel-data');
@@ -265,6 +283,7 @@ document.getElementById('menuNilai').addEventListener('click', function(e) {
 });
 
 document.getElementById('btnLogout').addEventListener('click', function() {
+    localStorage.removeItem('userData');
     window.location.href = '/login.html';
 });
 

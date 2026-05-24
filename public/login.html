@@ -32,33 +32,34 @@
         </div>
     </div>
     <script>
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            const alertBox = document.getElementById('loginAlert');
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+        const alertBox = document.getElementById('loginAlert');
 
-            fetch('/api/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ username: username, password: password })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.error) {
-                    alertBox.textContent = data.error;
-                    alertBox.classList.remove('d-none');
-                } else {
-                    window.location.href = '/';
-                }
-            })
-            .catch(err => {
-                alertBox.textContent = 'Terjadi kesalahan pada server.';
+        fetch('/api/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ username: username, password: password })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alertBox.textContent = data.error;
                 alertBox.classList.remove('d-none');
-            });
+            } else {
+                localStorage.setItem('userData', JSON.stringify(data.user));
+                window.location.href = '/';
+            }
+        })
+        .catch(err => {
+            alertBox.textContent = 'Terjadi kesalahan pada server.';
+            alertBox.classList.remove('d-none');
         });
-    </script>
+    });
+</script>
 </body>
 </html>
