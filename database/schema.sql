@@ -1,4 +1,3 @@
-
 CREATE DATABASE IF NOT EXISTS siakad;
 USE siakad;
 
@@ -74,4 +73,4 @@ INSERT INTO mata_kuliah (kode_mk, nama_mk, sks, dosen_id) VALUES
 ('IF101', 'Pemrograman Dasar', 3, 1),
 ('IF102', 'Basis Data', 3, 1);
 
-INSERT INTO enrollment (mahasiswa_id, mata_kuliah_id, semester) VALUES (1, 1, '2023/2024 Ganjil');
+INSERT INTO enrollment (mahasiswa_id, mata_kuliah_id, semester) VALUES (1, 1, 'Ganjil');
