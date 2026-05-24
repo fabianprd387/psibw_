@@ -7,7 +7,7 @@ if (!isset($_SESSION['user']) || $_SESSION['role'] != 'mahasiswa') {
     header('Location: login.php');
     exit();
 }
-include '../config/koneksi.php';
+require_once __DIR__ . '/../config/koneksi.php';
 
 // Ambil data mahasiswa
 $user_nim = mysqli_real_escape_string($conn, $_SESSION['user']);

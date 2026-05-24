@@ -4,7 +4,7 @@ if (!isset($_SESSION['user']) || $_SESSION['role'] != 'tendik') {
   header('Location: login.php');
   exit();
 }
-include '../config/koneksi.php';
+require_once __DIR__ . '/../config/koneksi.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $nip = mysqli_real_escape_string($conn, $_POST['nip']);

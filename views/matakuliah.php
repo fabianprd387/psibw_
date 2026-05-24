@@ -4,7 +4,7 @@ if (!isset($_SESSION['user']) || $_SESSION['role'] != 'tendik') {
   header('Location: login.php');
   exit();
 }
-include '../config/koneksi.php';
+require_once __DIR__ . '/../config/koneksi.php';
 $all = mysqli_query($conn, "SELECT m.*, d.nama as dosen_name FROM mata_kuliah m LEFT JOIN dosen d ON m.dosen_id = d.id ORDER BY m.id DESC");
 ?>
 <!doctype html>

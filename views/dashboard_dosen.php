@@ -4,7 +4,7 @@ if (!isset($_SESSION['user']) || $_SESSION['role'] != 'dosen') {
     header('Location: login.php');
     exit();
 }
-include '../config/koneksi.php';
+require_once __DIR__ . '/../config/koneksi.php';
 
 // Ambil data dosen
 $query = "SELECT * FROM dosen WHERE nip = '{$_SESSION['user']}'";

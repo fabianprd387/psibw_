@@ -4,7 +4,7 @@ if (!isset($_SESSION['user']) || $_SESSION['role'] != 'tendik') {
   header('Location: login.php');
   exit();
 }
-include '../config/koneksi.php';
+require_once __DIR__ . '/../config/koneksi.php';
 
 $total_mhs = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) AS count FROM mahasiswa"))['count'];
 $total_dosen = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) AS count FROM dosen"))['count'];

@@ -1,6 +1,6 @@
 <?php
 session_start();
-include '../config/koneksi.php';
+require_once __DIR__ . '/../config/koneksi.php';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Gunakan real_escape_string biar aman dari karakter aneh
