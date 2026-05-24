@@ -1,17 +1,17 @@
--- Schema database untuk SIAKAD
+
 CREATE DATABASE IF NOT EXISTS siakad;
 USE siakad;
 
--- Tabel users untuk login
+
 CREATE TABLE users (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    username VARCHAR(20) UNIQUE NOT NULL, -- NIM untuk mahasiswa, NIP untuk dosen/tendik
+    username VARCHAR(20) UNIQUE NOT NULL, 
     password VARCHAR(255) NOT NULL,
     role ENUM('mahasiswa', 'dosen', 'tendik') NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Tabel mahasiswa
+
 CREATE TABLE mahasiswa (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nim VARCHAR(20) UNIQUE NOT NULL,
@@ -21,7 +21,7 @@ CREATE TABLE mahasiswa (
     FOREIGN KEY (nim) REFERENCES users(username) ON DELETE CASCADE
 );
 
--- Tabel dosen
+
 CREATE TABLE dosen (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nip VARCHAR(20) UNIQUE NOT NULL,
@@ -30,7 +30,7 @@ CREATE TABLE dosen (
     FOREIGN KEY (nip) REFERENCES users(username) ON DELETE CASCADE
 );
 
--- Tabel tendik
+
 CREATE TABLE tendik (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nip VARCHAR(20) UNIQUE NOT NULL,
@@ -39,7 +39,7 @@ CREATE TABLE tendik (
     FOREIGN KEY (nip) REFERENCES users(username) ON DELETE CASCADE
 );
 
--- Tabel mata_kuliah
+
 CREATE TABLE mata_kuliah (
     id INT AUTO_INCREMENT PRIMARY KEY,
     kode_mk VARCHAR(10) UNIQUE NOT NULL,
@@ -49,7 +49,7 @@ CREATE TABLE mata_kuliah (
     FOREIGN KEY (dosen_id) REFERENCES dosen(id) ON DELETE SET NULL
 );
 
--- Tabel enrollment (relasi mahasiswa - mata_kuliah)
+
 CREATE TABLE enrollment (
     id INT AUTO_INCREMENT PRIMARY KEY,
     mahasiswa_id INT NOT NULL,
@@ -60,7 +60,7 @@ CREATE TABLE enrollment (
     FOREIGN KEY (mata_kuliah_id) REFERENCES mata_kuliah(id) ON DELETE CASCADE
 );
 
--- Insert data dummy
+
 INSERT INTO users (username, password, role) VALUES
 ('2403125938', '$2y$10$ie2uRylifJjWsuTovY4G7edJj9iLCNtbGcBZIBZUnsL/h2/G8ApXu', 'mahasiswa'),
 ('67890', '$2y$10$q2eOrmTbvF3ss9C.B6dnb.aZwKox89yV/XR9Lr.hREMjoTsbaq156', 'dosen'),

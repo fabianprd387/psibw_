@@ -1,5 +1,5 @@
 <?php
-// Koneksi database untuk SIAKAD
+
 $dbUrl = getenv('MYSQL_URL') ?: getenv('MYSQL_PUBLIC_URL');
 
 if ($dbUrl) {
@@ -17,7 +17,7 @@ if ($dbUrl) {
   $port = getenv('DB_PORT') ?: getenv('MYSQLPORT') ?: getenv('MYSQL_PORT') ?: 3306;
 }
 
-// Pastikan port dalam format integer
+
 $port = is_numeric($port) ? (int) $port : 3306;
 
 $conn = mysqli_connect($host, $user, $pass, $dbname, $port);

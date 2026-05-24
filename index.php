@@ -1,26 +1,39 @@
 <?php
-// 1. Tambahkan ini di paling atas untuk melihat error asli
+
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
-session_start();
+$requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+$scriptName = dirname($_SERVER['SCRIPT_NAME']);
+$path = substr($requestUri, strlen($scriptName));
+$path = trim($path, '/');
 
-// Cek apakah session user sudah ada
-if (isset($_SESSION['user']) && isset($_SESSION['role'])) {
+if ($path === '') {
+  require __DIR__ . '/api/index.php';
+  exit;
+}
 
-  // Redirect berdasarkan role
-  if ($_SESSION['role'] == 'tendik') {
-    header('Location: views/dashboard_admin.php');
-    exit();
-  } elseif ($_SESSION['role'] == 'dosen') {
-    header('Location: views/dashboard_dosen.php');
-    exit();
-  } elseif ($_SESSION['role'] == 'mahasiswa') {
-    header('Location: views/dashboard_mahasiswa.php');
-    exit();
-  }
-} else {
-  // Jika tidak ada session, lempar ke login
-  header('Location: views/login.php');
-  exit();
-}?>
+if (str_starts_with($path, 'api/')) {
+  $path = substr($path, strlen('api/'));
+}
+
+$allowed = ['login', 'mahasiswa', 'dosen', 'matakuliah', 'enrollment', 'profile', 'password', 'laporan'];
+$resource = explode('/', $path)[0];
+
+if (!in_array($resource, $allowed, true)) {
+  header('Content-Type: application/json; charset=utf-8');
+  http_response_code(404);
+  echo json_encode(['error' => 'Endpoint not found.', 'requested' => $path], JSON_UNESCAPED_UNICODE);
+  exit;
+}
+
+$apiFile = __DIR__ . '/api/' . basename($resource) . '.php';
+if (file_exists($apiFile)) {
+  require $apiFile;
+  exit;
+}
+
+header('Content-Type: application/json; charset=utf-8');
+http_response_code(404);
+echo json_encode(['error' => 'API file not found.', 'file' => $apiFile], JSON_UNESCAPED_UNICODE);
+exit;

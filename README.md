@@ -22,3 +22,41 @@ Web aplikasi SIAKAD dengan login berdasarkan NIM/NIP dan klasifikasi mahasiswa, 
 - Login dengan NIM/NIP
 - Dashboard berdasarkan role
 - Relasi mahasiswa-mata kuliah-dosen
+
+## Full REST API
+Aplikasi sekarang berjalan sebagai REST API.
+- Akses root API di `/`
+- Akses resource REST di `/login`, `/mahasiswa`, `/dosen`, `/matakuliah`, `/enrollment`, `/profile`, `/password`, `/laporan`
+- Folder `views/` masih ada untuk referensi, tetapi tidak lagi digunakan sebagai entry point
+
+### Contoh endpoint
+- `POST /login`
+- `GET /mahasiswa`
+- `GET /mahasiswa?id={id}`
+- `POST /mahasiswa`
+- `PUT /mahasiswa?id={id}`
+- `DELETE /mahasiswa?id={id}`
+- `GET /dosen`
+- `GET /matakuliah`
+- `GET /enrollment`
+- `GET /profile?nim={nim}`
+- `POST /password`
+- `GET /laporan`
+
+Gunakan `Content-Type: application/json` untuk request `POST`/`PUT`.
+
+Contoh endpoint:
+- `POST /api/login.php`
+- `GET /api/mahasiswa.php`
+- `GET /api/mahasiswa.php?id={id}`
+- `POST /api/mahasiswa.php`
+- `PUT /api/mahasiswa.php?id={id}`
+- `DELETE /api/mahasiswa.php?id={id}`
+- `GET /api/dosen.php`
+- `GET /api/matakuliah.php`
+- `GET /api/enrollment.php`
+- `GET /api/profile.php?nim={nim}`
+- `POST /api/password.php`
+- `GET /api/laporan.php`
+
+Gunakan `Content-Type: application/json` untuk request `POST`/`PUT`.

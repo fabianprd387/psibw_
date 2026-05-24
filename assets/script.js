@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', function() {
   function toggleCollapsed() {
     const collapsed = sidebar.classList.toggle('collapsed');
     mainContent.classList.toggle('collapsed');
-    // update aria-expanded for accessibility
+    
     if (toggleBtn) toggleBtn.setAttribute('aria-expanded', (!collapsed).toString());
   }
 
@@ -16,6 +16,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
-  // initialize aria state
+  
   if (toggleBtn && !sidebar.classList.contains('collapsed')) toggleBtn.setAttribute('aria-expanded', 'true');
 });
