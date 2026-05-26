@@ -659,14 +659,13 @@ function renderNilai() {
             const tbody = document.getElementById('nilaiBody');
             tbody.innerHTML = '';
             if (!Array.isArray(data) || data.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="${isDosen || isTendik ? 6 : 5}" class="text-center">Data nilai kosong.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="${isDosen ? 6 : 5}" class="text-center">Data nilai kosong.</td></tr>`;
                 return;
             }
             data.forEach(item => {
-                const actionCell = isDosen || isTendik ? `
+                const actionCell = isDosen ? `
                     <td>
                         <button class="btn btn-sm btn-outline-primary me-2" onclick="openNilaiModal(${item.id}, '${item.nilai || ''}')">Edit</button>
-                        ${isTendik ? `<button class="btn btn-sm btn-outline-danger" onclick="deleteNilai(${item.id})">Hapus</button>` : ''}
                     </td>` : '';
 
                 tbody.innerHTML += `
@@ -969,10 +968,6 @@ function openEnrollmentModal() {
                 <label class="form-label">ID Mata Kuliah</label>
                 <input type="number" class="form-control" id="entityMatkulId" required>
             </div>
-            <div class="mb-3">
-                <label class="form-label">Nilai</label>
-                <input type="text" class="form-control" id="entityNilai">
-            </div>
         </form>
     `, saveEnrollment);
 }
@@ -1030,10 +1025,12 @@ async function saveNilai(id) {
 async function saveEnrollment() {
     const nim = document.getElementById('entityNim').value.trim();
     const id_matkul = document.getElementById('entityMatkulId').value.trim();
-    const nilai = document.getElementById('entityNilai').value.trim();
+    const nilaiEl = document.getElementById('entityNilai');
+    const nilai = nilaiEl ? nilaiEl.value.trim() : null;
     if (!nim || !id_matkul) return;
+    const body = nilai ? { nim, id_matkul, nilai } : { nim, id_matkul };
     try {
-        await fetchJson(`${apiUrl('enrollment')}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ nim, id_matkul, nilai }) });
+        await fetchJson(`${apiUrl('enrollment')}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
         entityModal.hide();
         renderEnrollment();
     } catch (error) {
@@ -1075,10 +1072,7 @@ async function loadEnrollmentData() {
                     <td>${item.nama_mk || '-'}</td>
                     <td>${item.dosen || '-'}</td>
                     <td>${item.nilai || '-'}</td>
-                    <td>
-                        <button class="btn btn-sm btn-outline-primary me-2" onclick="openNilaiModal(${item.id}, '${item.nilai || ''}')">Edit</button>
-                        <button class="btn btn-sm btn-outline-danger" onclick="deleteNilai(${item.id})">Hapus</button>
-                    </td>
+                    <td>-</td>
                 </tr>
             `;
         });
