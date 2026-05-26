@@ -4,33 +4,81 @@ global $conn;
 
 $id = isset($_GET['id']) ? (int) $_GET['id'] : null;
 $nim = isset($_GET['nim']) ? trim($_GET['nim']) : null;
+$dosenId = isset($_GET['dosen_id']) ? (int) $_GET['dosen_id'] : null;
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
   if ($id) {
-    $record = query_fetch_one("SELECT n.id, n.nim, m.nama AS mahasiswa, mk.nama_mk, d.nama AS dosen, n.nilai FROM nilai n JOIN mahasiswa m ON n.nim = m.nim JOIN mata_kuliah mk ON n.id_matkul = mk.id LEFT JOIN dosen d ON mk.dosen_id = d.id WHERE n.id = $id");
+    $record = query_fetch_one("SELECT e.id, m.nim, m.nama AS mahasiswa, mk.nama_mk, d.nama AS dosen, e.nilai, mk.dosen_id FROM enrollment e JOIN mahasiswa m ON e.mahasiswa_id = m.id JOIN mata_kuliah mk ON e.mata_kuliah_id = mk.id LEFT JOIN dosen d ON mk.dosen_id = d.id WHERE e.id = $id");
     if (!$record) {
-      not_found('Nilai tidak ditemukan.');
+      not_found('Enrollment tidak ditemukan.');
     }
     send_json($record);
   }
+
+  $conditions = [];
   if ($nim) {
     $nim = escape($nim);
-    $records = query_fetch_all("SELECT n.id, n.nim, m.nama AS mahasiswa, mk.nama_mk, d.nama AS dosen, n.nilai FROM nilai n JOIN mahasiswa m ON n.nim = m.nim JOIN mata_kuliah mk ON n.id_matkul = mk.id LEFT JOIN dosen d ON mk.dosen_id = d.id WHERE n.nim = '$nim' ORDER BY n.id DESC");
-    send_json($records);
+    $conditions[] = "m.nim = '$nim'";
   }
-  $records = query_fetch_all('SELECT n.id, n.nim, m.nama AS mahasiswa, mk.nama_mk, d.nama AS dosen, n.nilai FROM nilai n JOIN mahasiswa m ON n.nim = m.nim JOIN mata_kuliah mk ON n.id_matkul = mk.id LEFT JOIN dosen d ON mk.dosen_id = d.id ORDER BY n.id DESC');
+  if ($dosenId) {
+    $conditions[] = "mk.dosen_id = $dosenId";
+  }
+  $where = count($conditions) ? 'WHERE ' . implode(' AND ', $conditions) : '';
+
+  $records = query_fetch_all("SELECT e.id, m.nim, m.nama AS mahasiswa, mk.nama_mk, d.nama AS dosen, e.nilai, mk.dosen_id FROM enrollment e JOIN mahasiswa m ON e.mahasiswa_id = m.id JOIN mata_kuliah mk ON e.mata_kuliah_id = mk.id LEFT JOIN dosen d ON mk.dosen_id = d.id $where ORDER BY e.id DESC");
   send_json($records);
 }
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+  $data = get_input();
+  $nimValue = trim($data['nim'] ?? '');
+  $mataKuliahId = isset($data['id_matkul']) ? (int) $data['id_matkul'] : null;
+  $nilai = trim($data['nilai'] ?? '');
+
+  if ($nimValue === '' || !$mataKuliahId) {
+    send_json(['error' => 'NIM dan ID mata kuliah wajib diisi.'], 400);
+  }
+
+  $student = query_fetch_one("SELECT id FROM mahasiswa WHERE nim = '" . escape($nimValue) . "'");
+  if (!$student) {
+    not_found('Mahasiswa tidak ditemukan.');
+  }
+
+  $course = query_fetch_one("SELECT id FROM mata_kuliah WHERE id = $mataKuliahId");
+  if (!$course) {
+    not_found('Mata kuliah tidak ditemukan.');
+  }
+
+  $exists = query_fetch_one("SELECT id FROM enrollment WHERE mahasiswa_id = {$student['id']} AND mata_kuliah_id = $mataKuliahId");
+  if ($exists) {
+    send_json(['error' => 'Enrollment untuk mahasiswa dan mata kuliah ini sudah ada.'], 409);
+  }
+
+  $sql = sprintf(
+    "INSERT INTO enrollment (mahasiswa_id, mata_kuliah_id, nilai) VALUES (%d, %d, %s)",
+    $student['id'],
+    $mataKuliahId,
+    $nilai !== '' ? "'" . escape($nilai) . "'" : 'NULL'
+  );
+
+  if (!mysqli_query($conn, $sql)) {
+    send_json(['error' => mysqli_error($conn)], 500);
+  }
+
+  $lastId = mysqli_insert_id($conn);
+  $record = query_fetch_one("SELECT e.id, m.nim, m.nama AS mahasiswa, mk.nama_mk, d.nama AS dosen, e.nilai, mk.dosen_id FROM enrollment e JOIN mahasiswa m ON e.mahasiswa_id = m.id JOIN mata_kuliah mk ON e.mata_kuliah_id = mk.id LEFT JOIN dosen d ON mk.dosen_id = d.id WHERE e.id = $lastId");
+  send_json(['success' => true, 'enrollment' => $record], 201);
+}
+
 if ($id === null) {
-  method_not_allowed(['GET']);
+  method_not_allowed(['GET', 'POST']);
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
   $data = get_input();
-  $record = query_fetch_one("SELECT * FROM nilai WHERE id = $id");
+  $record = query_fetch_one("SELECT * FROM enrollment WHERE id = $id");
   if (!$record) {
-    not_found('Nilai tidak ditemukan.');
+    not_found('Enrollment tidak ditemukan.');
   }
 
   $nilai = trim($data['nilai'] ?? '');
@@ -38,13 +86,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
     send_json(['error' => 'Nilai wajib diisi.'], 400);
   }
 
-  $sql = sprintf("UPDATE nilai SET nilai = '%s' WHERE id = %d", escape($nilai), $id);
+  $sql = sprintf("UPDATE enrollment SET nilai = '%s' WHERE id = %d", escape($nilai), $id);
   if (!mysqli_query($conn, $sql)) {
     send_json(['error' => mysqli_error($conn)], 500);
   }
 
-  $record = query_fetch_one("SELECT n.id, n.nim, m.nama AS mahasiswa, mk.nama_mk, d.nama AS dosen, n.nilai FROM nilai n JOIN mahasiswa m ON n.nim = m.nim JOIN mata_kuliah mk ON n.id_matkul = mk.id LEFT JOIN dosen d ON mk.dosen_id = d.id WHERE n.id = $id");
-  send_json(['success' => true, 'nilai' => $record]);
+  $record = query_fetch_one("SELECT e.id, m.nim, m.nama AS mahasiswa, mk.nama_mk, d.nama AS dosen, e.nilai, mk.dosen_id FROM enrollment e JOIN mahasiswa m ON e.mahasiswa_id = m.id JOIN mata_kuliah mk ON e.mata_kuliah_id = mk.id LEFT JOIN dosen d ON mk.dosen_id = d.id WHERE e.id = $id");
+  send_json(['success' => true, 'enrollment' => $record]);
 }
 
-method_not_allowed(['GET', 'PUT']);
+if ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
+  $record = query_fetch_one("SELECT * FROM enrollment WHERE id = $id");
+  if (!$record) {
+    not_found('Enrollment tidak ditemukan.');
+  }
+
+  if (!mysqli_query($conn, "DELETE FROM enrollment WHERE id = $id")) {
+    send_json(['error' => mysqli_error($conn)], 500);
+  }
+
+  send_json(['success' => true]);
+}
+
+method_not_allowed(['GET', 'POST', 'PUT', 'DELETE']);

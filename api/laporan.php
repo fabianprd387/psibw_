@@ -8,7 +8,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
 $totalMahasiswa = query_fetch_one('SELECT COUNT(*) AS total FROM mahasiswa');
 $totalDosen = query_fetch_one('SELECT COUNT(*) AS total FROM dosen');
 $totalMatakuliah = query_fetch_one('SELECT COUNT(*) AS total FROM mata_kuliah');
-$totalNilai = query_fetch_one('SELECT COUNT(*) AS total FROM nilai');
+$totalNilai = query_fetch_one('SELECT COUNT(*) AS total FROM enrollment');
 
 send_json([
   'total_mahasiswa' => (int) ($totalMahasiswa['total'] ?? 0),

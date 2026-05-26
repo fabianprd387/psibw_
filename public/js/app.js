@@ -173,57 +173,297 @@ async function loadUserContext() {
     setSection('dashboard');
 }
 
+function calculateAverage(values) {
+    const numbers = values
+        .map(value => Number(value))
+        .filter(value => !Number.isNaN(value));
+    if (!numbers.length) return null;
+    return (numbers.reduce((sum, value) => sum + value, 0) / numbers.length).toFixed(2);
+}
+
 function renderDashboard() {
+    const role = currentUser.role;
     mainContent.innerHTML = `
         <div class="row gy-4">
             <div class="col-12">
                 <div class="card shadow-sm p-4">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="d-flex justify-content-between align-items-start gap-3 mb-4 flex-column flex-md-row">
                         <div>
-                            <h3 class="mb-1">Dashboard</h3>
-                            <p class="text-muted mb-0">Ringkasan akademik untuk role <strong>${currentUser.role}</strong>.</p>
+                            <h3 class="mb-2">Dashboard ${role === 'mahasiswa' ? 'Mahasiswa' : role === 'dosen' ? 'Dosen' : 'Tendik'}</h3>
+                            <p class="text-muted mb-0">Ringkasan aktivitas dan data penting untuk role <strong>${role}</strong>.</p>
                         </div>
-                        <span class="badge bg-secondary text-uppercase">${currentUser.role}</span>
+                        <div class="text-end">
+                            <span class="badge bg-primary text-uppercase">${role}</span>
+                        </div>
                     </div>
-                    <div class="row" id="dashboardCards">
+                    <div class="row gy-4" id="dashboardCards">
                         <div class="col-12 text-center py-5 text-muted">Memuat data...</div>
                     </div>
+                    <div class="mt-4" id="dashboardDetails"></div>
                 </div>
             </div>
         </div>
     `;
 
+    const cardsEl = document.getElementById('dashboardCards');
+    const detailsEl = document.getElementById('dashboardDetails');
+
+    if (role === 'mahasiswa') {
+        fetchJson(`${apiUrl('enrollment')}?nim=${encodeURIComponent(currentUser.username)}`)
+            .then(records => {
+                const totalCourses = records.length;
+                const average = calculateAverage(records.map(item => item.nilai));
+                cardsEl.innerHTML = `
+                    <div class="col-12 col-md-4">
+                        <div class="card border-0 shadow-sm p-4 bg-light h-100">
+                            <div class="d-flex align-items-center justify-content-between mb-3">
+                                <div>
+                                    <span class="text-secondary text-uppercase small">Mata Kuliah</span>
+                                    <h3 class="mb-0">${totalCourses}</h3>
+                                </div>
+                                <i class="fas fa-book fa-2x text-primary"></i>
+                            </div>
+                            <p class="text-muted mb-0">Total mata kuliah yang diambil.</p>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <div class="card border-0 shadow-sm p-4 bg-light h-100">
+                            <div class="d-flex align-items-center justify-content-between mb-3">
+                                <div>
+                                    <span class="text-secondary text-uppercase small">Rata-rata</span>
+                                    <h3 class="mb-0">${average ?? '-'}</h3>
+                                </div>
+                                <i class="fas fa-chart-line fa-2x text-success"></i>
+                            </div>
+                            <p class="text-muted mb-0">Nilai rata-rata dari mata kuliah.</p>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <div class="card border-0 shadow-sm p-4 bg-light h-100">
+                            <div class="d-flex align-items-center justify-content-between mb-3">
+                                <div>
+                                    <span class="text-secondary text-uppercase small">Terisi</span>
+                                    <h3 class="mb-0">${records.filter(item => item.nilai).length}</h3>
+                                </div>
+                                <i class="fas fa-check-circle fa-2x text-info"></i>
+                            </div>
+                            <p class="text-muted mb-0">Jumlah nilai yang sudah tersedia.</p>
+                        </div>
+                    </div>
+                `;
+
+                if (!records.length) {
+                    detailsEl.innerHTML = '<div class="alert alert-info">Belum ada data nilai. Silakan ajukan mata kuliah atau hubungi dosen untuk mendapatkan nilai.</div>';
+                    return;
+                }
+
+                detailsEl.innerHTML = `
+                    <div class="card border-0 shadow-sm p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="mb-0">Nilai Terbaru</h5>
+                            <small class="text-muted">Ditampilkan 5 data terakhir</small>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover align-middle">
+                                <thead class="table-light"><tr><th>Mata Kuliah</th><th>Dosen</th><th>Nilai</th></tr></thead>
+                                <tbody>
+                                    ${records.slice(0, 5).map(item => `
+                                        <tr>
+                                            <td>${item.nama_mk || '-'}</td>
+                                            <td>${item.dosen || '-'}</td>
+                                            <td>${item.nilai || '-'}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+            })
+            .catch(() => {
+                cardsEl.innerHTML = `<div class="col-12 text-center text-danger">Tidak dapat memuat data nilai.</div>`;
+                detailsEl.innerHTML = '';
+            });
+        return;
+    }
+
+    if (role === 'dosen') {
+        if (!currentTeacherId) {
+            cardsEl.innerHTML = `<div class="col-12"><div class="alert alert-warning">Akun dosen belum dikaitkan dengan data dosen.</div></div>`;
+            detailsEl.innerHTML = '';
+            return;
+        }
+
+        Promise.all([
+            fetchJson(`${apiUrl('matakuliah')}`),
+            fetchJson(`${apiUrl('enrollment')}?dosen_id=${currentTeacherId}`)
+        ]).then(([courses, records]) => {
+            const myCourses = Array.isArray(courses) ? courses.filter(course => course.dosen_id === currentTeacherId || String(course.dosen_id) === String(currentTeacherId)) : [];
+            const totalCourses = myCourses.length;
+            const totalStudents = new Set(records.map(item => item.nim)).size;
+            const average = calculateAverage(records.map(item => item.nilai));
+
+            cardsEl.innerHTML = `
+                <div class="col-12 col-md-4">
+                    <div class="card border-0 shadow-sm p-4 bg-light h-100">
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <div>
+                                <span class="text-secondary text-uppercase small">Mata Kuliah</span>
+                                <h3 class="mb-0">${totalCourses}</h3>
+                            </div>
+                            <i class="fas fa-chalkboard-teacher fa-2x text-primary"></i>
+                        </div>
+                        <p class="text-muted mb-0">Jumlah mata kuliah yang Anda ampu.</p>
+                    </div>
+                </div>
+                <div class="col-12 col-md-4">
+                    <div class="card border-0 shadow-sm p-4 bg-light h-100">
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <div>
+                                <span class="text-secondary text-uppercase small">Mahasiswa</span>
+                                <h3 class="mb-0">${totalStudents}</h3>
+                            </div>
+                            <i class="fas fa-user-graduate fa-2x text-success"></i>
+                        </div>
+                        <p class="text-muted mb-0">Mahasiswa terdaftar pada mata kuliah Anda.</p>
+                    </div>
+                </div>
+                <div class="col-12 col-md-4">
+                    <div class="card border-0 shadow-sm p-4 bg-light h-100">
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <div>
+                                <span class="text-secondary text-uppercase small">Rata-rata</span>
+                                <h3 class="mb-0">${average ?? '-'}</h3>
+                            </div>
+                            <i class="fas fa-percent fa-2x text-info"></i>
+                        </div>
+                        <p class="text-muted mb-0">Rata-rata nilai di kelas yang Anda ampu.</p>
+                    </div>
+                </div>
+            `;
+
+            if (!records.length) {
+                detailsEl.innerHTML = '<div class="alert alert-info">Belum ada nilai untuk mata kuliah Anda.</div>';
+                return;
+            }
+
+            detailsEl.innerHTML = `
+                <div class="row gy-3">
+                    <div class="col-12 col-lg-6">
+                        <div class="card border-0 shadow-sm p-4 h-100">
+                            <h5 class="mb-3">Mata Kuliah Utama</h5>
+                            <ul class="list-group list-group-flush">
+                                ${myCourses.slice(0, 5).map(course => `<li class="list-group-item px-0 py-2">${course.kode_mk} - ${course.nama_mk}</li>`).join('')}
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-12 col-lg-6">
+                        <div class="card border-0 shadow-sm p-4 h-100">
+                            <h5 class="mb-3">Nilai Terbaru</h5>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover align-middle">
+                                    <thead class="table-light"><tr><th>Mahasiswa</th><th>Mata Kuliah</th><th>Nilai</th></tr></thead>
+                                    <tbody>
+                                        ${records.slice(0, 5).map(item => `
+                                            <tr>
+                                                <td>${item.mahasiswa || '-'}</td>
+                                                <td>${item.nama_mk || '-'}</td>
+                                                <td>${item.nilai || '-'}</td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).catch(() => {
+            cardsEl.innerHTML = `<div class="col-12 text-center text-danger">Tidak dapat memuat data untuk dosen.</div>`;
+            detailsEl.innerHTML = '';
+        });
+        return;
+    }
+
     fetchJson(`${apiUrl('laporan')}`)
         .then(data => {
-            document.getElementById('dashboardCards').innerHTML = `
+            cardsEl.innerHTML = `
                 <div class="col-12 col-md-3">
-                    <div class="card border-0 shadow-sm p-3 text-center h-100">
-                        <div class="text-secondary">Mahasiswa</div>
-                        <h2 class="mt-2">${data.total_mahasiswa || 0}</h2>
+                    <div class="card border-0 shadow-sm p-4 bg-light h-100">
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <div>
+                                <span class="text-secondary text-uppercase small">Mahasiswa</span>
+                                <h3 class="mb-0">${data.total_mahasiswa || 0}</h3>
+                            </div>
+                            <i class="fas fa-users fa-2x text-primary"></i>
+                        </div>
+                        <p class="text-muted mb-0">Jumlah mahasiswa terdaftar.</p>
                     </div>
                 </div>
                 <div class="col-12 col-md-3">
-                    <div class="card border-0 shadow-sm p-3 text-center h-100">
-                        <div class="text-secondary">Dosen</div>
-                        <h2 class="mt-2">${data.total_dosen || 0}</h2>
+                    <div class="card border-0 shadow-sm p-4 bg-light h-100">
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <div>
+                                <span class="text-secondary text-uppercase small">Dosen</span>
+                                <h3 class="mb-0">${data.total_dosen || 0}</h3>
+                            </div>
+                            <i class="fas fa-chalkboard-teacher fa-2x text-success"></i>
+                        </div>
+                        <p class="text-muted mb-0">Jumlah dosen aktif.</p>
                     </div>
                 </div>
                 <div class="col-12 col-md-3">
-                    <div class="card border-0 shadow-sm p-3 text-center h-100">
-                        <div class="text-secondary">Mata Kuliah</div>
-                        <h2 class="mt-2">${data.total_matakuliah || 0}</h2>
+                    <div class="card border-0 shadow-sm p-4 bg-light h-100">
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <div>
+                                <span class="text-secondary text-uppercase small">Mata Kuliah</span>
+                                <h3 class="mb-0">${data.total_matakuliah || 0}</h3>
+                            </div>
+                            <i class="fas fa-book fa-2x text-info"></i>
+                        </div>
+                        <p class="text-muted mb-0">Jumlah mata kuliah tersedia.</p>
                     </div>
                 </div>
                 <div class="col-12 col-md-3">
-                    <div class="card border-0 shadow-sm p-3 text-center h-100">
-                        <div class="text-secondary">Nilai</div>
-                        <h2 class="mt-2">${data.total_nilai || 0}</h2>
+                    <div class="card border-0 shadow-sm p-4 bg-light h-100">
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <div>
+                                <span class="text-secondary text-uppercase small">Enrollment</span>
+                                <h3 class="mb-0">${data.total_nilai || 0}</h3>
+                            </div>
+                            <i class="fas fa-clipboard-list fa-2x text-warning"></i>
+                        </div>
+                        <p class="text-muted mb-0">Jumlah enrollment mata kuliah.</p>
+                    </div>
+                </div>
+            `;
+
+            detailsEl.innerHTML = `
+                <div class="row gy-3">
+                    <div class="col-12 col-lg-4">
+                        <div class="card border-0 shadow-sm p-4 h-100">
+                            <h6 class="text-uppercase text-secondary mb-3">Menu cepat</h6>
+                            <button class="btn btn-primary w-100 mb-2" onclick="setSection('mahasiswa')"><i class="fas fa-users me-2"></i>Kelola Mahasiswa</button>
+                            <button class="btn btn-outline-primary w-100 mb-2" onclick="setSection('dosen')"><i class="fas fa-chalkboard-teacher me-2"></i>Kelola Dosen</button>
+                            <button class="btn btn-outline-primary w-100" onclick="setSection('matakuliah')"><i class="fas fa-book me-2"></i>Kelola Matakuliah</button>
+                        </div>
+                    </div>
+                    <div class="col-12 col-lg-8">
+                        <div class="card border-0 shadow-sm p-4 h-100">
+                            <h5 class="mb-3">Ringkasan Tendik</h5>
+                            <p class="text-muted">Panel ini membantu tendik melihat statistik utama dan menjalankan tugas manajemen akademik dengan cepat.</p>
+                            <div class="progress mb-3" style="height: 14px; border-radius: 12px;">
+                                <div class="progress-bar bg-primary" role="progressbar" style="width: 80%"></div>
+                            </div>
+                            <small class="text-muted">Tingkat pemanfaatan sistem: 80%.</small>
+                        </div>
                     </div>
                 </div>
             `;
         })
         .catch(() => {
-            document.getElementById('dashboardCards').innerHTML = `<div class="col-12 text-center text-danger">Tidak dapat memuat data.</div>`;
+            cardsEl.innerHTML = `<div class="col-12 text-center text-danger">Tidak dapat memuat data.</div>`;
+            detailsEl.innerHTML = '';
         });
 }
 
@@ -386,7 +626,15 @@ function renderNilai() {
     `;
 
     let url = `${apiUrl('enrollment')}`;
-    if (isMahasiswa) url += `?nim=${encodeURIComponent(currentUser.username)}`;
+    if (isMahasiswa) {
+        url += `?nim=${encodeURIComponent(currentUser.username)}`;
+    } else if (isDosen) {
+        if (!currentTeacherId) {
+            showAlert('Tidak dapat memuat data. Data dosen tidak ditemukan.');
+            return;
+        }
+        url += `?dosen_id=${currentTeacherId}`;
+    }
 
     fetchJson(url)
         .then(data => {
