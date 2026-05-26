@@ -131,6 +131,9 @@ function buildMenu() {
             { id: 'nilai', label: 'Nilai', icon: 'fa-graduation-cap' },
             { id: 'import', label: 'Import CSV', icon: 'fa-file-import' }
         ] : []),
+        ...(role === 'dosen' ? [
+            { id: 'import', label: 'Import CSV', icon: 'fa-file-import' }
+        ] : []),
         { id: 'profile', label: 'Profile', icon: 'fa-user' }
     ];
 
@@ -714,10 +717,26 @@ function renderEnrollment() {
 }
 
 function renderImport() {
-    if (currentUser.role !== 'tendik') {
-        showAlert('Akses hanya untuk tendik.');
+    const isTendik = currentUser.role === 'tendik';
+    const isDosen = currentUser.role === 'dosen';
+    if (!isTendik && !isDosen) {
+        showAlert('Akses hanya untuk tendik dan dosen.');
         return;
     }
+
+    const description = isTendik
+        ? 'Upload file CSV, XLSX, atau XLS untuk menambahkan data mahasiswa, dosen, matakuliah, atau enrollment.'
+        : 'Upload file CSV, XLSX, atau XLS untuk memasukkan nilai mahasiswa.';
+    const options = isTendik
+        ? `
+                            <option value="mahasiswa">Mahasiswa</option>
+                            <option value="dosen">Dosen</option>
+                            <option value="matakuliah">Mata Kuliah</option>
+                            <option value="enrollment">Enrollment</option>
+                        `
+        : `
+                            <option value="nilai">Nilai</option>
+                        `;
 
     mainContent.innerHTML = `
         <div class="card shadow-sm">
@@ -725,15 +744,11 @@ function renderImport() {
                 <h5 class="mb-0">Import CSV / Excel</h5>
             </div>
             <div class="card-body">
-                <p class="text-muted">Upload file CSV, XLSX, atau XLS untuk menambahkan data mahasiswa, dosen, atau matakuliah.</p>
+                <p class="text-muted">${description}</p>
                 <form id="importForm">
                     <div class="mb-3">
                         <label class="form-label">Jenis data</label>
-                        <select class="form-select" id="importType" required>
-                            <option value="mahasiswa">Mahasiswa</option>
-                            <option value="dosen">Dosen</option>
-                            <option value="matakuliah">Mata Kuliah</option>
-                        </select>
+                        <select class="form-select" id="importType" required>${options}</select>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">File CSV / Excel</label>
