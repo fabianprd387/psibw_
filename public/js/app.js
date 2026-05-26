@@ -5,6 +5,10 @@ const API_ROOT = (() => {
     }
     return new URL('api', window.location.href).pathname.replace(/\/$/, '');
 })();
+const API_EXT = '.php';
+function apiUrl(path) {
+    return `${API_ROOT}/${path}${API_EXT}`;
+}
 const mainContent = document.getElementById('mainContent');
 const mainMenu = document.getElementById('mainMenu');
 const btnLogout = document.getElementById('btnLogout');
@@ -162,7 +166,7 @@ async function loadUserContext() {
     buildMenu();
 
     if (currentUser.role === 'dosen') {
-        const teacher = await fetchJson(`${API_ROOT}/dosen?nip=${encodeURIComponent(currentUser.username)}`).catch(() => null);
+        const teacher = await fetchJson(`${apiUrl('dosen')}?nip=${encodeURIComponent(currentUser.username)}`).catch(() => null);
         currentTeacherId = teacher?.id || null;
     }
 
@@ -189,7 +193,7 @@ function renderDashboard() {
         </div>
     `;
 
-    fetchJson(`${API_ROOT}/laporan`)
+    fetchJson(`${apiUrl('laporan')}`)
         .then(data => {
             document.getElementById('dashboardCards').innerHTML = `
                 <div class="col-12 col-md-3">
@@ -242,7 +246,7 @@ function renderMahasiswa() {
         </div>
     `;
 
-    fetchJson(`${API_ROOT}/mahasiswa`)
+    fetchJson(`${apiUrl('mahasiswa')}`)
         .then(data => {
             const tbody = document.getElementById('mahasiswaBody');
             tbody.innerHTML = '';
@@ -288,7 +292,7 @@ function renderDosen() {
         </div>
     `;
 
-    fetchJson(`${API_ROOT}/dosen`)
+    fetchJson(`${apiUrl('dosen')}`)
         .then(data => {
             const tbody = document.getElementById('dosenBody');
             tbody.innerHTML = '';
@@ -333,7 +337,7 @@ function renderMatakuliah() {
         </div>
     `;
 
-    Promise.all([fetchJson(`${API_ROOT}/matakuliah`), fetchJson(`${API_ROOT}/dosen`)]).then(([courses, dosen]) => {
+    Promise.all([fetchJson(`${apiUrl('matakuliah')}`), fetchJson(`${apiUrl('dosen')}`)]).then(([courses, dosen]) => {
         const tbody = document.getElementById('matakuliahBody');
         tbody.innerHTML = '';
         if (!Array.isArray(courses) || courses.length === 0) {
@@ -381,7 +385,7 @@ function renderNilai() {
         </div>
     `;
 
-    let url = `${API_ROOT}/enrollment`;
+    let url = `${apiUrl('enrollment')}`;
     if (isMahasiswa) url += `?nim=${encodeURIComponent(currentUser.username)}`;
 
     fetchJson(url)
@@ -495,7 +499,7 @@ function renderImport() {
                 throw new Error('File tidak memiliki data atau header yang valid.');
             }
 
-            const response = await fetch(`${API_ROOT}/import`, {
+            const response = await fetch(`${apiUrl('import')}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ type, rows })
@@ -566,7 +570,7 @@ function renderProfile() {
         }
 
         try {
-            const data = await fetchJson(`${API_ROOT}/password`, {
+            const data = await fetchJson(`${apiUrl('password')}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username: currentUser.username, current_password: currentPassword, new_password: newPassword })
@@ -607,7 +611,7 @@ function openMahasiswaModal(id = null) {
     `;
 
     if (id) {
-        fetchJson(`${API_ROOT}/mahasiswa?id=${id}`)
+        fetchJson(`${apiUrl('mahasiswa')}?id=${id}`)
             .then(data => {
                 document.getElementById('entityNim').value = data.nim || '';
                 document.getElementById('entityNama').value = data.nama || '';
@@ -645,7 +649,7 @@ function openDosenModal(id = null) {
     `;
 
     if (id) {
-        fetchJson(`${API_ROOT}/dosen?id=${id}`)
+        fetchJson(`${apiUrl('dosen')}?id=${id}`)
             .then(data => {
                 document.getElementById('entityNip').value = data.nip || '';
                 document.getElementById('entityNama').value = data.nama || '';
@@ -685,11 +689,11 @@ function openMatakuliahModal(id = null) {
         <button type="button" class="btn btn-primary" id="saveEntityBtn">Simpan</button>
     `;
 
-    fetchJson(`${API_ROOT}/dosen`).then(dosen => {
+    fetchJson(`${apiUrl('dosen')}`).then(dosen => {
         const select = document.getElementById('entityDosen');
         select.innerHTML = '<option value="">Pilih dosen (opsional)</option>' + dosen.map(item => `<option value="${item.id}">${item.nama} (${item.nip})</option>`).join('');
         if (id) {
-            fetchJson(`${API_ROOT}/matakuliah?id=${id}`)
+            fetchJson(`${apiUrl('matakuliah')}?id=${id}`)
                 .then(data => {
                     document.getElementById('entityKode').value = data.kode_mk || '';
                     document.getElementById('entityNama').value = data.nama_mk || '';
@@ -757,7 +761,7 @@ async function saveMahasiswa(id) {
     if (!nim || !nama) return;
 
     const body = { nim, nama, jurusan, angkatan };
-    const url = id ? `${API_ROOT}/mahasiswa?id=${id}` : `${API_ROOT}/mahasiswa`;
+    const url = id ? `${apiUrl('mahasiswa')}?id=${id}` : `${apiUrl('mahasiswa')}`;
     const method = id ? 'PUT' : 'POST';
 
     try {
@@ -775,7 +779,7 @@ async function saveDosen(id) {
     const jurusan = document.getElementById('entityJurusan').value.trim();
     if (!nip || !nama) return;
     const body = { nip, nama, jurusan };
-    const url = id ? `${API_ROOT}/dosen?id=${id}` : `${API_ROOT}/dosen`;
+    const url = id ? `${apiUrl('dosen')}?id=${id}` : `${apiUrl('dosen')}`;
     const method = id ? 'PUT' : 'POST';
     try { await fetchJson(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }); entityModal.hide(); renderDosen(); } catch (error) { showAlert(error.message); }
 }
@@ -787,7 +791,7 @@ async function saveMatakuliah(id) {
     const dosenId = document.getElementById('entityDosen').value;
     if (!kode || !nama || !sks) return;
     const body = { kode_mk: kode, nama_mk: nama, sks, dosen_id: dosenId || null };
-    const url = id ? `${API_ROOT}/matakuliah?id=${id}` : `${API_ROOT}/matakuliah`;
+    const url = id ? `${apiUrl('matakuliah')}?id=${id}` : `${apiUrl('matakuliah')}`;
     const method = id ? 'PUT' : 'POST';
     try { await fetchJson(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }); entityModal.hide(); renderMatakuliah(); } catch (error) { showAlert(error.message); }
 }
@@ -795,7 +799,7 @@ async function saveMatakuliah(id) {
 async function saveNilai(id) {
     const nilai = document.getElementById('entityNilai').value.trim();
     if (!nilai) return;
-    try { await fetchJson(`${API_ROOT}/enrollment?id=${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ nilai }) }); entityModal.hide(); renderNilai(); } catch (error) { showAlert(error.message); }
+    try { await fetchJson(`${apiUrl('enrollment')}?id=${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ nilai }) }); entityModal.hide(); renderNilai(); } catch (error) { showAlert(error.message); }
 }
 
 async function saveEnrollment() {
@@ -804,7 +808,7 @@ async function saveEnrollment() {
     const nilai = document.getElementById('entityNilai').value.trim();
     if (!nim || !id_matkul) return;
     try {
-        await fetchJson(`${API_ROOT}/enrollment`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ nim, id_matkul, nilai }) });
+        await fetchJson(`${apiUrl('enrollment')}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ nim, id_matkul, nilai }) });
         entityModal.hide();
         renderEnrollment();
     } catch (error) {
@@ -814,27 +818,27 @@ async function saveEnrollment() {
 
 async function deleteMahasiswa(id) {
     if (!confirm('Hapus mahasiswa ini?')) return;
-    try { await fetchJson(`${API_ROOT}/mahasiswa?id=${id}`, { method: 'DELETE' }); renderMahasiswa(); } catch (error) { showAlert(error.message); }
+    try { await fetchJson(`${apiUrl('mahasiswa')}?id=${id}`, { method: 'DELETE' }); renderMahasiswa(); } catch (error) { showAlert(error.message); }
 }
 
 async function deleteDosen(id) {
     if (!confirm('Hapus dosen ini?')) return;
-    try { await fetchJson(`${API_ROOT}/dosen?id=${id}`, { method: 'DELETE' }); renderDosen(); } catch (error) { showAlert(error.message); }
+    try { await fetchJson(`${apiUrl('dosen')}?id=${id}`, { method: 'DELETE' }); renderDosen(); } catch (error) { showAlert(error.message); }
 }
 
 async function deleteMatakuliah(id) {
     if (!confirm('Hapus matakuliah ini?')) return;
-    try { await fetchJson(`${API_ROOT}/matakuliah?id=${id}`, { method: 'DELETE' }); renderMatakuliah(); } catch (error) { showAlert(error.message); }
+    try { await fetchJson(`${apiUrl('matakuliah')}?id=${id}`, { method: 'DELETE' }); renderMatakuliah(); } catch (error) { showAlert(error.message); }
 }
 
 async function deleteNilai(id) {
     if (!confirm('Hapus data nilai ini?')) return;
-    try { await fetchJson(`${API_ROOT}/enrollment?id=${id}`, { method: 'DELETE' }); renderNilai(); } catch (error) { showAlert(error.message); }
+    try { await fetchJson(`${apiUrl('enrollment')}?id=${id}`, { method: 'DELETE' }); renderNilai(); } catch (error) { showAlert(error.message); }
 }
 
 async function loadEnrollmentData() {
     try {
-        const data = await fetchJson(`${API_ROOT}/enrollment`);
+        const data = await fetchJson(`${apiUrl('enrollment')}`);
         const tbody = document.getElementById('enrollmentBody');
         tbody.innerHTML = '';
         if (!Array.isArray(data) || data.length === 0) {
