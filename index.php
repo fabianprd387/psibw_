@@ -10,7 +10,7 @@ $path = trim($path, '/');
 
 if (str_starts_with($path, 'api/')) {
     $apiPath = substr($path, strlen('api/'));
-    $allowed = ['login', 'mahasiswa', 'dosen', 'matakuliah', 'enrollment', 'profile', 'password', 'laporan'];
+    $allowed = ['login', 'mahasiswa', 'dosen', 'matakuliah', 'enrollment', 'profile', 'password', 'laporan', 'import'];
     $resource = explode('/', $apiPath)[0];
 
     if (in_array($resource, $allowed, true)) {

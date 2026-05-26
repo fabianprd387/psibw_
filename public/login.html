@@ -3,63 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login SIAKAD - UNRI</title>
+    <title>Login SIAKAD</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="css/style.css" rel="stylesheet">
 </head>
 <body class="bg-login">
-    <div class="container">
+    <div class="container py-5">
         <div class="row justify-content-center">
-            <div class="col-md-4">
-                <div class="card login-card">
+            <div class="col-12 col-md-6 col-lg-5">
+                <div class="card login-card shadow-lg">
                     <div class="card-body p-4">
-                        <h4 class="text-center mb-4">Login SIAKAD</h4>
+                        <div class="text-center mb-4">
+                            <h2 class="fw-bold">SIAKAD</h2>
+                            <p class="text-muted">Login dengan NIM/NIP untuk mengakses sistem akademik.</p>
+                        </div>
+                        <div id="loginAlert" class="alert alert-danger d-none" role="alert"></div>
                         <form id="loginForm">
                             <div class="mb-3">
                                 <label for="username" class="form-label">Username</label>
-                                <input type="text" class="form-control" id="username" required>
+                                <input type="text" class="form-control" id="username" placeholder="NIM atau NIP" required>
                             </div>
                             <div class="mb-3">
                                 <label for="password" class="form-label">Password</label>
-                                <input type="password" class="form-control" id="password" required>
+                                <input type="password" class="form-control" id="password" placeholder="Password" required>
                             </div>
                             <button type="submit" class="btn btn-primary w-100">Masuk</button>
                         </form>
-                        <div id="loginAlert" class="alert alert-danger mt-3 d-none" role="alert"></div>
+                        <div class="mt-4 text-center text-muted small">
+                            Role yang tersedia: <strong>mahasiswa</strong>, <strong>dosen</strong>, <strong>tendik</strong>.
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    <script>
-    document.getElementById('loginForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        const username = document.getElementById('username').value;
-        const password = document.getElementById('password').value;
-        const alertBox = document.getElementById('loginAlert');
 
-        fetch('/api/login', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ username: username, password: password })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.error) {
-                alertBox.textContent = data.error;
-                alertBox.classList.remove('d-none');
-            } else {
-                localStorage.setItem('userData', JSON.stringify(data.user));
-                window.location.href = '/';
+    <script>
+        const loginForm = document.getElementById('loginForm');
+        const loginAlert = document.getElementById('loginAlert');
+
+        function showError(message) {
+            loginAlert.textContent = message;
+            loginAlert.classList.remove('d-none');
+        }
+
+        loginForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            loginAlert.classList.add('d-none');
+
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+
+            if (!username || !password) {
+                showError('Username dan password harus diisi.');
+                return;
             }
-        })
-        .catch(err => {
-            alertBox.textContent = 'Terjadi kesalahan pada server.';
-            alertBox.classList.remove('d-none');
+
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const data = await response.json();
+
+                if (!response.ok || data.error) {
+                    showError(data.error || 'Login gagal. Silakan coba lagi.');
+                    return;
+                }
+
+                localStorage.setItem('siakadUser', JSON.stringify(data.user));
+                window.location.href = '/';
+            } catch (error) {
+                showError('Terjadi kesalahan server.');
+                console.error(error);
+            }
         });
-    });
-</script>
+    </script>
 </body>
 </html>
