@@ -1,4 +1,10 @@
-const API_ROOT = '/api';
+const API_ROOT = (() => {
+    const path = window.location.pathname;
+    if (path.includes('/public/') || path.endsWith('/login.html')) {
+        return new URL('../api', window.location.href).pathname.replace(/\/$/, '');
+    }
+    return new URL('api', window.location.href).pathname.replace(/\/$/, '');
+})();
 const mainContent = document.getElementById('mainContent');
 const mainMenu = document.getElementById('mainMenu');
 const btnLogout = document.getElementById('btnLogout');
@@ -23,7 +29,7 @@ function getUser() {
 
 function redirectToLogin() {
     localStorage.removeItem('siakadUser');
-    window.location.href = '/login.html';
+    window.location.href = 'login.html';
 }
 
 function showAlert(message, type = 'danger') {
@@ -142,7 +148,7 @@ function setSection(section) {
 
 function logout() {
     localStorage.removeItem('siakadUser');
-    window.location.href = '/login.html';
+    window.location.href = 'login.html';
 }
 
 async function loadUserContext() {
