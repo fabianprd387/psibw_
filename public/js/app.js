@@ -120,7 +120,7 @@ function buildMenu() {
         ] : []),
         ...(role === 'dosen' ? [
             { id: 'mahasiswa', label: 'Mahasiswa', icon: 'fa-users' },
-            { id: 'matakuliah', label: 'Jadwal', icon: 'fa-calendar-alt' },
+            { id: 'matakuliah', label: 'Daftar Matakuliah', icon: 'fa-calendar-alt' },
             { id: 'nilai', label: 'Nilai', icon: 'fa-pen' }
         ] : []),
         ...(role === 'tendik' ? [
