@@ -7,7 +7,7 @@ $kode = isset($_GET['kode_mk']) ? trim($_GET['kode_mk']) : null;
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
   if ($id) {
-    $course = query_fetch_one("SELECT m.id, m.kode_mk, m.nama_mk, m.sks, m.dosen_id, d.nama AS dosen FROM mata_kuliah m LEFT JOIN dosen d ON m.dosen_id = d.id WHERE m.id = $id");
+    $course = query_fetch_one("SELECT m.id, m.kode_mk, m.nama_mk, m.sks, m.semester, m.dosen_id, d.nama AS dosen FROM mata_kuliah m LEFT JOIN dosen d ON m.dosen_id = d.id WHERE m.id = $id");
     if (!$course) {
       not_found('Matakuliah tidak ditemukan.');
     }
@@ -15,13 +15,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
   }
   if ($kode) {
     $kode = escape($kode);
-    $course = query_fetch_one("SELECT m.id, m.kode_mk, m.nama_mk, m.sks, m.dosen_id, d.nama AS dosen FROM mata_kuliah m LEFT JOIN dosen d ON m.dosen_id = d.id WHERE m.kode_mk = '$kode'");
+    $course = query_fetch_one("SELECT m.id, m.kode_mk, m.nama_mk, m.sks, m.semester, m.dosen_id, d.nama AS dosen FROM mata_kuliah m LEFT JOIN dosen d ON m.dosen_id = d.id WHERE m.kode_mk = '$kode'");
     if (!$course) {
       not_found('Matakuliah tidak ditemukan.');
     }
     send_json($course);
   }
-  $courses = query_fetch_all('SELECT m.id, m.kode_mk, m.nama_mk, m.sks, m.dosen_id, d.nama AS dosen FROM mata_kuliah m LEFT JOIN dosen d ON m.dosen_id = d.id ORDER BY m.id DESC');
+  $courses = query_fetch_all('SELECT m.id, m.kode_mk, m.nama_mk, m.sks, m.semester, m.dosen_id, d.nama AS dosen FROM mata_kuliah m LEFT JOIN dosen d ON m.dosen_id = d.id ORDER BY m.id DESC');
   send_json($courses);
 }
 
@@ -30,6 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $kode = trim($data['kode_mk'] ?? '');
   $nama = trim($data['nama_mk'] ?? '');
   $sks = trim($data['sks'] ?? '');
+  $semester = trim($data['semester'] ?? '');
   $dosenId = isset($data['dosen_id']) ? (int) $data['dosen_id'] : null;
 
   if ($kode === '' || $nama === '' || $sks === '') {
@@ -48,11 +49,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
   }
 
+  $semesterValue = $semester !== '' ? (int)$semester : 'NULL';
+
   $sql = sprintf(
-    "INSERT INTO mata_kuliah (kode_mk, nama_mk, sks, dosen_id) VALUES ('%s', '%s', %d, %s)",
+    "INSERT INTO mata_kuliah (kode_mk, nama_mk, sks, semester, dosen_id) VALUES ('%s', '%s', %d, %s, %s)",
     escape($kode),
     escape($nama),
     (int) $sks,
+    $semesterValue,
     $dosenId ? (int)$dosenId : 'NULL'
   );
 
@@ -61,7 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   }
 
   $lastId = mysqli_insert_id($conn);
-  $course = query_fetch_one("SELECT m.id, m.kode_mk, m.nama_mk, m.sks, m.dosen_id, d.nama AS dosen FROM mata_kuliah m LEFT JOIN dosen d ON m.dosen_id = d.id WHERE m.id = $lastId");
+  $course = query_fetch_one("SELECT m.id, m.kode_mk, m.nama_mk, m.sks, m.semester, m.dosen_id, d.nama AS dosen FROM mata_kuliah m LEFT JOIN dosen d ON m.dosen_id = d.id WHERE m.id = $lastId");
   send_json(['success' => true, 'matakuliah' => $course], 201);
 }
 
@@ -79,6 +83,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
   $kode = trim($data['kode_mk'] ?? $course['kode_mk']);
   $nama = trim($data['nama_mk'] ?? $course['nama_mk']);
   $sks = trim($data['sks'] ?? $course['sks']);
+  $semester = isset($data['semester']) ? trim($data['semester']) : $course['semester'];
   $dosenId = isset($data['dosen_id']) ? (int) $data['dosen_id'] : $course['dosen_id'];
 
   if ($kode === '' || $nama === '' || $sks === '') {
@@ -99,11 +104,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
     }
   }
 
+  $semesterValue = ($semester !== '' && $semester !== null) ? (int)$semester : 'NULL';
+
   $sql = sprintf(
-    "UPDATE mata_kuliah SET kode_mk = '%s', nama_mk = '%s', sks = %d, dosen_id = %s WHERE id = %d",
+    "UPDATE mata_kuliah SET kode_mk = '%s', nama_mk = '%s', sks = %d, semester = %s, dosen_id = %s WHERE id = %d",
     escape($kode),
     escape($nama),
     (int) $sks,
+    $semesterValue,
     $dosenId ? (int)$dosenId : 'NULL',
     $id
   );
@@ -112,7 +120,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
     send_json(['error' => mysqli_error($conn)], 500);
   }
 
-  $course = query_fetch_one("SELECT m.id, m.kode_mk, m.nama_mk, m.sks, m.dosen_id, d.nama AS dosen FROM mata_kuliah m LEFT JOIN dosen d ON m.dosen_id = d.id WHERE m.id = $id");
+  $course = query_fetch_one("SELECT m.id, m.kode_mk, m.nama_mk, m.sks, m.semester, m.dosen_id, d.nama AS dosen FROM mata_kuliah m LEFT JOIN dosen d ON m.dosen_id = d.id WHERE m.id = $id");
   send_json(['success' => true, 'matakuliah' => $course]);
 }
 

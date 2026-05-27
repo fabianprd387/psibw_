@@ -652,8 +652,8 @@ function renderMatakuliah(page = 1) {
             <div class="card-body">
                 <div class="table-responsive">
                     <table class="table table-hover align-middle">
-                        <thead class="table-light"><tr><th>Kode MK</th><th>Nama</th><th>SKS</th><th>Dosen</th>${canEdit ? '<th>Aksi</th>' : ''}</tr></thead>
-                        <tbody id="matakuliahBody"><tr><td colspan="${canEdit ? 5 : 4}" class="text-center">Memuat data...</td></tr></tbody>
+                        <thead class="table-light"><tr><th>Kode MK</th><th>Nama</th><th>SKS</th><th>Semester</th><th>Dosen</th>${canEdit ? '<th>Aksi</th>' : ''}</tr></thead>
+                        <tbody id="matakuliahBody"><tr><td colspan="${canEdit ? 6 : 5}" class="text-center">Memuat data...</td></tr></tbody>
                     </table>
                 </div>
                 <div id="matakuliahPagination"></div>
@@ -665,7 +665,7 @@ function renderMatakuliah(page = 1) {
         const tbody = document.getElementById('matakuliahBody');
         tbody.innerHTML = '';
         if (!Array.isArray(courses) || courses.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="${canEdit ? 5 : 4}" class="text-center">Data matakuliah kosong.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="${canEdit ? 6 : 5}" class="text-center">Data matakuliah kosong.</td></tr>`;
             return;
         }
         const paginated = paginateData(courses, currentPage);
@@ -675,6 +675,7 @@ function renderMatakuliah(page = 1) {
                     <td>${item.kode_mk || '-'}</td>
                     <td>${item.nama_mk || '-'}</td>
                     <td>${item.sks || '-'}</td>
+                    <td>${item.semester || '-'}</td>
                     <td>${item.dosen || '-'}</td>
                     ${canEdit ? `<td>
                         <button class="btn btn-sm btn-outline-primary me-2" onclick="openMatakuliahModal(${item.id})">Edit</button>
@@ -1141,6 +1142,10 @@ function openMatakuliahModal(id = null) {
                 <input type="number" class="form-control" id="entitySks" required>
             </div>
             <div class="mb-3">
+                <label class="form-label">Semester</label>
+                <input type="number" class="form-control" id="entitySemester">
+            </div>
+            <div class="mb-3">
                 <label class="form-label">Dosen</label>
                 <select class="form-select" id="entityDosen"></select>
             </div>
@@ -1156,6 +1161,7 @@ function openMatakuliahModal(id = null) {
                 document.getElementById('entityKode').value = data.kode_mk || '';
                 document.getElementById('entityNama').value = data.nama_mk || '';
                 document.getElementById('entitySks').value = data.sks || '';
+                document.getElementById('entitySemester').value = data.semester || '';
                 document.getElementById('entityDosen').value = data.dosen_id || '';
             })
             .catch(() => showAlert('Tidak dapat memuat data matakuliah.'));
@@ -1224,9 +1230,10 @@ async function saveMatakuliah(id) {
     const kode = document.getElementById('entityKode').value.trim();
     const nama = document.getElementById('entityNama').value.trim();
     const sks = document.getElementById('entitySks').value.trim();
+    const semester = document.getElementById('entitySemester').value.trim();
     const dosenId = document.getElementById('entityDosen').value;
     if (!kode || !nama || !sks) return;
-    const body = { kode_mk: kode, nama_mk: nama, sks, dosen_id: dosenId || null };
+    const body = { kode_mk: kode, nama_mk: nama, sks, semester, dosen_id: dosenId || null };
     const url = id ? `${apiUrl('matakuliah')}?id=${id}` : `${apiUrl('matakuliah')}`;
     const method = id ? 'PUT' : 'POST';
     try { await fetchJson(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }); entityModal.hide(); renderMatakuliah(currentPage); } catch (error) { showAlert(error.message); }
