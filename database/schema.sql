@@ -7,6 +7,7 @@ CREATE TABLE users (
     username VARCHAR(20) UNIQUE NOT NULL, 
     password VARCHAR(255) NOT NULL,
     role ENUM('mahasiswa', 'dosen', 'tendik') NOT NULL,
+    profile_photo VARCHAR(255) DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -61,10 +62,9 @@ CREATE TABLE enrollment (
 
 
 INSERT INTO users (username, password, role) VALUES
-('2403125938', '$2y$10$ie2uRylifJjWsuTovY4G7edJj9iLCNtbGcBZIBZUnsL/h2/G8ApXu', 'mahasiswa'),
-('67890', '$2y$10$q2eOrmTbvF3ss9C.B6dnb.aZwKox89yV/XR9Lr.hREMjoTsbaq156', 'dosen'),
-('11111', '$2y$10$I931SCKyvtaLucxbFqmpruQs.dQNK7T9b8gAK7fqup.qZvVTtbbru', 'tendik');
-
+('67890', 'dosen', 'dosen'),
+('11111', '11111', 'tendik'),
+('2403112037','2403112037','mahasiswa');
 INSERT INTO mahasiswa (nim, nama, jurusan, angkatan) VALUES ('2403125938', 'John Doe', 'Informatika', 2020);
 INSERT INTO dosen (nip, nama, jurusan) VALUES ('67890', 'Dr. Jane Smith', 'Informatika');
 INSERT INTO tendik (nip, nama, jabatan) VALUES ('11111', 'Admin Staff', 'Administrator');

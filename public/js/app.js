@@ -109,6 +109,15 @@ function parseImportFile(file) {
     });
 }
 
+function readFileAsDataURL(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onerror = () => reject(new Error('Tidak dapat membaca file foto.'));
+        reader.onload = () => resolve(reader.result);
+        reader.readAsDataURL(file);
+    });
+}
+
 function buildMenu() {
     const role = currentUser.role;
     const menus = [
@@ -171,7 +180,14 @@ async function loadUserContext() {
         return;
     }
 
-    userDisplay.textContent = `${currentUser.username} (${currentUser.role})`;
+    if (currentUser.photo_url) {
+        userDisplay.innerHTML = `
+            <img src="${currentUser.photo_url}" class="rounded-circle me-2" width="28" height="28" style="object-fit: cover;"> ${currentUser.username} (${currentUser.role})
+        `;
+    } else {
+        userDisplay.textContent = `${currentUser.username} (${currentUser.role})`;
+    }
+
     buildMenu();
 
     if (currentUser.role === 'dosen') {
@@ -803,64 +819,193 @@ function renderImport() {
     });
 }
 
-function renderProfile() {
-    mainContent.innerHTML = `
-        <div class="row gy-4">
-            <div class="col-12 col-lg-6">
-                <div class="card shadow-sm p-4">
-                    <h5>Profile</h5>
-                    <p><strong>Username:</strong> ${currentUser.username}</p>
-                    <p><strong>Role:</strong> ${currentUser.role}</p>
+async function renderProfile() {
+    mainContent.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary" role="status"></div></div>';
+
+    try {
+        const profile = await fetchJson(`${apiUrl('profile')}?nim=${encodeURIComponent(currentUser.username)}`);
+        const initials = (profile.name || profile.username || '').split(' ').map(part => part[0]).join('').slice(0, 2).toUpperCase();
+        const defaultAvatar = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='104' height='104'%3E%3Crect width='100%25' height='100%25' fill='%230d6efd'/%3E%3Ctext x='50%25' y='55%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='42' fill='%23ffffff'%3E${encodeURIComponent(initials)}%3C/text%3E%3C/svg%3E`;
+        const avatarUrl = profile.photo_url || defaultAvatar;
+        const showJurusan = profile.role === 'mahasiswa' || profile.role === 'dosen';
+
+        mainContent.innerHTML = `
+            <div class="row gy-4">
+                <div class="col-12 col-xl-7">
+                    <div class="card shadow-sm p-4">
+                        <div class="profile-hero">
+                            <div class="profile-avatar">
+                                <img src="${avatarUrl}" alt="Foto Profil">
+                            </div>
+                            <div class="profile-meta">
+                                <h2>${profile.name || profile.username}</h2>
+                                <p class="muted text-uppercase mb-1">${profile.role}</p>
+                                <p class="text-muted mb-0">${profile.label_id}: ${profile.id_value}</p>
+                            </div>
+                        </div>
+                        <div class="student-details">
+                            <dl>
+                                <dt>Username</dt><dd>${profile.username}</dd>
+                                ${showJurusan ? `<dt>Jurusan</dt><dd>${profile.jurusan || '-'}</dd>` : ''}
+                                ${profile.role === 'mahasiswa' ? `<dt>Angkatan</dt><dd>${profile.angkatan || '-'}</dd>` : ''}
+                                ${profile.role === 'tendik' ? `<dt>Jabatan</dt><dd>${profile.jabatan || '-'}</dd>` : ''}
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-xl-5">
+                    <div class="card shadow-sm p-4">
+                        <h5 class="mb-3">Perbarui Profil</h5>
+                        <form id="profileForm">
+                            <div class="mb-3 text-center">
+                                <img src="${avatarUrl}" id="profilePreview" class="rounded-circle mb-3" width="104" height="104" style="object-fit: cover; display: inline-block;">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Ubah Foto Profil</label>
+                                <input type="file" accept="image/png, image/jpeg" class="form-control" id="profilePhoto">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Nama Lengkap</label>
+                                <input type="text" class="form-control" id="profileName" value="${profile.name || ''}" required>
+                            </div>
+                            ${profile.role === 'mahasiswa' ? `
+                                <div class="mb-3">
+                                    <label class="form-label">Jurusan</label>
+                                    <input type="text" class="form-control" id="profileJurusan" value="${profile.jurusan || ''}">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Angkatan</label>
+                                    <input type="number" class="form-control" id="profileAngkatan" value="${profile.angkatan || ''}">
+                                </div>
+                            ` : ''}
+                            ${profile.role === 'dosen' ? `
+                                <div class="mb-3">
+                                    <label class="form-label">Jurusan</label>
+                                    <input type="text" class="form-control" id="profileJurusan" value="${profile.jurusan || ''}">
+                                </div>
+                            ` : ''}
+                            ${profile.role === 'tendik' ? `
+                                <div class="mb-3">
+                                    <label class="form-label">Jabatan</label>
+                                    <input type="text" class="form-control" id="profileJabatan" value="${profile.jabatan || ''}">
+                                </div>
+                            ` : ''}
+                            <button type="submit" class="btn btn-primary w-100">Simpan Perubahan</button>
+                        </form>
+                        <div id="profileResult" class="mt-3"></div>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="card shadow-sm p-4">
+                        <h5>Ubah Password</h5>
+                        <form id="passwordForm">
+                            <div class="mb-3">
+                                <label class="form-label">Password Lama</label>
+                                <input type="password" class="form-control" id="currentPassword" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Password Baru</label>
+                                <input type="password" class="form-control" id="newPassword" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Konfirmasi Password Baru</label>
+                                <input type="password" class="form-control" id="confirmPassword" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Simpan Password Baru</button>
+                        </form>
+                        <div id="passwordResult" class="mt-3"></div>
+                    </div>
                 </div>
             </div>
-            <div class="col-12 col-lg-6">
-                <div class="card shadow-sm p-4">
-                    <h5>Ubah Password</h5>
-                    <form id="passwordForm">
-                        <div class="mb-3">
-                            <label class="form-label">Password Lama</label>
-                            <input type="password" class="form-control" id="currentPassword" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Password Baru</label>
-                            <input type="password" class="form-control" id="newPassword" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Konfirmasi Password Baru</label>
-                            <input type="password" class="form-control" id="confirmPassword" required>
-                        </div>
-                        <button type="submit" class="btn btn-primary">Simpan Password Baru</button>
-                    </form>
-                    <div id="passwordResult" class="mt-3"></div>
-                </div>
-            </div>
-        </div>
-    `;
+        `;
 
-    document.getElementById('passwordForm').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        const currentPassword = document.getElementById('currentPassword').value;
-        const newPassword = document.getElementById('newPassword').value;
-        const confirmPassword = document.getElementById('confirmPassword').value;
-        const resultBox = document.getElementById('passwordResult');
+        const profilePhotoInput = document.getElementById('profilePhoto');
+        const profilePreview = document.getElementById('profilePreview');
+        profilePhotoInput.addEventListener('change', () => {
+            const file = profilePhotoInput.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = () => {
+                profilePreview.src = reader.result;
+            };
+            reader.readAsDataURL(file);
+        });
 
-        if (newPassword !== confirmPassword) {
-            resultBox.innerHTML = '<div class="alert alert-warning">Konfirmasi password tidak cocok.</div>';
-            return;
-        }
+        document.getElementById('profileForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const resultBox = document.getElementById('profileResult');
+            resultBox.innerHTML = '';
 
-        try {
-            const data = await fetchJson(`${apiUrl('password')}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: currentUser.username, current_password: currentPassword, new_password: newPassword })
-            });
-            resultBox.innerHTML = `<div class="alert alert-success">${data.success ? 'Password berhasil diubah.' : 'Gagal mengubah password.'}</div>`;
-            document.getElementById('passwordForm').reset();
-        } catch (error) {
-            resultBox.innerHTML = `<div class="alert alert-danger">${error.message}</div>`;
-        }
-    });
+            const name = document.getElementById('profileName').value.trim();
+            const body = { name };
+
+            if (profile.role === 'mahasiswa') {
+                body.jurusan = document.getElementById('profileJurusan').value.trim();
+                body.angkatan = document.getElementById('profileAngkatan').value.trim();
+            }
+            if (profile.role === 'dosen') {
+                body.jurusan = document.getElementById('profileJurusan').value.trim();
+            }
+            if (profile.role === 'tendik') {
+                body.jabatan = document.getElementById('profileJabatan').value.trim();
+            }
+
+            if (profilePhotoInput.files.length) {
+                try {
+                    body.photo_data = await readFileAsDataURL(profilePhotoInput.files[0]);
+                } catch (error) {
+                    resultBox.innerHTML = `<div class="alert alert-danger">${error.message}</div>`;
+                    return;
+                }
+            }
+
+            try {
+                const data = await fetchJson(`${apiUrl('profile')}?nim=${encodeURIComponent(currentUser.username)}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                resultBox.innerHTML = '<div class="alert alert-success">Profil berhasil diperbarui.</div>';
+                currentUser = { ...currentUser, photo_url: data.profile.photo_url };
+                localStorage.setItem('siakadUser', JSON.stringify(currentUser));
+                if (currentUser.photo_url) {
+                    userDisplay.innerHTML = `
+                        <img src="${currentUser.photo_url}" class="rounded-circle me-2" width="28" height="28" style="object-fit: cover;"> ${currentUser.username} (${currentUser.role})
+                    `;
+                }
+                setSection(currentSection);
+            } catch (error) {
+                resultBox.innerHTML = `<div class="alert alert-danger">${error.message}</div>`;
+            }
+        });
+
+        document.getElementById('passwordForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const resultBox = document.getElementById('passwordResult');
+
+            if (newPassword !== confirmPassword) {
+                resultBox.innerHTML = '<div class="alert alert-warning">Konfirmasi password tidak cocok.</div>';
+                return;
+            }
+
+            try {
+                const data = await fetchJson(`${apiUrl('password')}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: currentUser.username, current_password: currentPassword, new_password: newPassword })
+                });
+                resultBox.innerHTML = `<div class="alert alert-success">${data.success ? 'Password berhasil diubah.' : 'Gagal mengubah password.'}</div>`;
+                document.getElementById('passwordForm').reset();
+            } catch (error) {
+                resultBox.innerHTML = `<div class="alert alert-danger">${error.message}</div>`;
+            }
+        });
+    } catch (error) {
+        showAlert(error.message);
+    }
 }
 
 function openMahasiswaModal(id = null) {
