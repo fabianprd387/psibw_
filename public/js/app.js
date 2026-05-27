@@ -1169,11 +1169,19 @@ function openMatakuliahModal(id = null) {
 }
 
 function openNilaiModal(id, nilai) {
+    const options = ['A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'D', 'E'];
+    const optionsHtml = options.map(opt => 
+        `<option value="${opt}" ${nilai === opt ? 'selected' : ''}>${opt}</option>`
+    ).join('');
+
     openModal('Edit Nilai', `
         <form id="entityForm">
             <div class="mb-3">
                 <label class="form-label">Nilai</label>
-                <input type="text" class="form-control" id="entityNilai" value="${nilai}" required>
+                <select class="form-select" id="entityNilai" required>
+                    <option value="">Pilih Nilai</option>
+                    ${optionsHtml}
+                </select>
             </div>
         </form>
     `, () => saveNilai(id));
