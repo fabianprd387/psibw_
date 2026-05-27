@@ -23,6 +23,9 @@ let currentUser = null;
 let currentSection = 'dashboard';
 let currentTeacherId = null;
 
+let currentPage = 1;
+const rowsPerPage = 10;
+
 function getUser() {
     try {
         return JSON.parse(localStorage.getItem('siakadUser') || 'null');
@@ -164,6 +167,7 @@ function buildMenu() {
 
 function setSection(section) {
     currentSection = section;
+    currentPage = 1;
     document.querySelectorAll('#mainMenu .nav-link').forEach(link => link.classList.toggle('active', link.dataset.section === section));
     if (renderers[section]) renderers[section]();
 }
@@ -206,6 +210,40 @@ function calculateAverage(values) {
     return (numbers.reduce((sum, value) => sum + value, 0) / numbers.length).toFixed(2);
 }
 
+function renderPaginationControl(totalItems, targetAction) {
+    const totalPages = Math.ceil(totalItems / rowsPerPage);
+    if (totalPages <= 1) return '';
+
+    let itemsHtml = '';
+    for (let i = 1; i <= totalPages; i++) {
+        itemsHtml += `
+            <li class="page-item ${currentPage === i ? 'active' : ''}">
+                <a class="page-link" href="#" onclick="event.preventDefault(); ${targetAction}(${i})">${i}</a>
+            </li>
+        `;
+    }
+
+    return `
+        <nav class="mt-3">
+            <ul class="pagination pagination-sm justify-content-center">
+                <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                    <a class="page-link" href="#" onclick="event.preventDefault(); ${targetAction}(${currentPage - 1})">Previous</a>
+                </li>
+                ${itemsHtml}
+                <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+                    <a class="page-link" href="#" onclick="event.preventDefault(); ${targetAction}(${currentPage + 1})">Next</a>
+                </li>
+            </ul>
+        </nav>
+    `;
+}
+
+function paginateData(data, page) {
+    const start = (page - 1) * rowsPerPage;
+    const end = start + rowsPerPage;
+    return data.slice(start, end);
+}
+
 const renderers = {
     dashboard: renderDashboard,
     mahasiswa: renderMahasiswa,
@@ -216,7 +254,6 @@ const renderers = {
     import: renderImport,
     profile: renderProfile
 };
-
 
 function renderDashboard() {
     const role = currentUser.role;
@@ -504,7 +541,8 @@ function renderDashboard() {
         });
 }
 
-function renderMahasiswa() {
+function renderMahasiswa(page = 1) {
+    currentPage = page;
     const canEdit = currentUser.role === 'tendik';
     mainContent.innerHTML = `
         <div class="card shadow-sm">
@@ -519,6 +557,7 @@ function renderMahasiswa() {
                         <tbody id="mahasiswaBody"><tr><td colspan="${canEdit ? 5 : 4}" class="text-center">Memuat data...</td></tr></tbody>
                     </table>
                 </div>
+                <div id="mahasiswaPagination"></div>
             </div>
         </div>
     `;
@@ -531,7 +570,8 @@ function renderMahasiswa() {
                 tbody.innerHTML = `<tr><td colspan="${canEdit ? 5 : 4}" class="text-center">Data Mahasiswa kosong.</td></tr>`;
                 return;
             }
-            data.forEach(item => {
+            const paginated = paginateData(data, currentPage);
+            paginated.forEach(item => {
                 tbody.innerHTML += `
                     <tr>
                         <td>${item.nim || '-'}</td>
@@ -545,12 +585,14 @@ function renderMahasiswa() {
                     </tr>
                 `;
             });
+            document.getElementById('mahasiswaPagination').innerHTML = renderPaginationControl(data.length, 'renderMahasiswa');
             if (canEdit) document.getElementById('addMahasiswaBtn').addEventListener('click', () => openMahasiswaModal());
         })
         .catch(() => showAlert('Gagal memuat data mahasiswa.'));
 }
 
-function renderDosen() {
+function renderDosen(page = 1) {
+    currentPage = page;
     const canEdit = currentUser.role === 'tendik';
     mainContent.innerHTML = `
         <div class="card shadow-sm">
@@ -565,6 +607,7 @@ function renderDosen() {
                         <tbody id="dosenBody"><tr><td colspan="${canEdit ? 4 : 3}" class="text-center">Memuat data...</td></tr></tbody>
                     </table>
                 </div>
+                <div id="dosenPagination"></div>
             </div>
         </div>
     `;
@@ -577,7 +620,8 @@ function renderDosen() {
                 tbody.innerHTML = `<tr><td colspan="${canEdit ? 4 : 3}" class="text-center">Data Dosen kosong.</td></tr>`;
                 return;
             }
-            data.forEach(item => {
+            const paginated = paginateData(data, currentPage);
+            paginated.forEach(item => {
                 tbody.innerHTML += `
                     <tr>
                         <td>${item.nip || '-'}</td>
@@ -590,12 +634,14 @@ function renderDosen() {
                     </tr>
                 `;
             });
+            document.getElementById('dosenPagination').innerHTML = renderPaginationControl(data.length, 'renderDosen');
             if (canEdit) document.getElementById('addDosenBtn').addEventListener('click', () => openDosenModal());
         })
         .catch(() => showAlert('Gagal memuat data dosen.'));
 }
 
-function renderMatakuliah() {
+function renderMatakuliah(page = 1) {
+    currentPage = page;
     const canEdit = currentUser.role === 'tendik';
     mainContent.innerHTML = `
         <div class="card shadow-sm">
@@ -610,6 +656,7 @@ function renderMatakuliah() {
                         <tbody id="matakuliahBody"><tr><td colspan="${canEdit ? 5 : 4}" class="text-center">Memuat data...</td></tr></tbody>
                     </table>
                 </div>
+                <div id="matakuliahPagination"></div>
             </div>
         </div>
     `;
@@ -621,7 +668,8 @@ function renderMatakuliah() {
             tbody.innerHTML = `<tr><td colspan="${canEdit ? 5 : 4}" class="text-center">Data matakuliah kosong.</td></tr>`;
             return;
         }
-        courses.forEach(item => {
+        const paginated = paginateData(courses, currentPage);
+        paginated.forEach(item => {
             tbody.innerHTML += `
                 <tr>
                     <td>${item.kode_mk || '-'}</td>
@@ -635,11 +683,13 @@ function renderMatakuliah() {
                 </tr>
             `;
         });
+        document.getElementById('matakuliahPagination').innerHTML = renderPaginationControl(courses.length, 'renderMatakuliah');
         if (canEdit) document.getElementById('addMatakuliahBtn').addEventListener('click', () => openMatakuliahModal());
     }).catch(() => showAlert('Gagal memuat data matakuliah.'));
 }
 
-function renderNilai() {
+function renderNilai(page = 1) {
+    currentPage = page;
     const isMahasiswa = currentUser.role === 'mahasiswa';
     const isDosen = currentUser.role === 'dosen';
     const isTendik = currentUser.role === 'tendik';
@@ -658,6 +708,7 @@ function renderNilai() {
                         <tbody id="nilaiBody"><tr><td colspan="${isDosen || isTendik ? 6 : 5}" class="text-center">Memuat data...</td></tr></tbody>
                     </table>
                 </div>
+                <div id="nilaiPagination"></div>
             </div>
         </div>
     `;
@@ -678,14 +729,15 @@ function renderNilai() {
             const tbody = document.getElementById('nilaiBody');
             tbody.innerHTML = '';
             if (!Array.isArray(data) || data.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="${isDosen ? 6 : 5}" class="text-center">Data nilai kosong.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="${isDosen || isTendik ? 6 : 5}" class="text-center">Data nilai kosong.</td></tr>`;
                 return;
             }
-            data.forEach(item => {
+            const paginated = paginateData(data, currentPage);
+            paginated.forEach(item => {
                 const actionCell = isDosen ? `
                     <td>
                         <button class="btn btn-sm btn-outline-primary me-2" onclick="openNilaiModal(${item.id}, '${item.nilai || ''}')">Edit</button>
-                    </td>` : '';
+                    </td>` : isTendik ? `<td>-</td>` : '';
 
                 tbody.innerHTML += `
                     <tr>
@@ -698,15 +750,18 @@ function renderNilai() {
                     </tr>
                 `;
             });
+            document.getElementById('nilaiPagination').innerHTML = renderPaginationControl(data.length, 'renderNilai');
         })
         .catch(() => showAlert('Gagal memuat data nilai.'));
 }
 
-function renderEnrollment() {
+function renderEnrollment(page = 1) {
     if (currentUser.role !== 'tendik') {
         showAlert('Akses hanya untuk tendik.');
         return;
     }
+
+    currentPage = page;
 
     mainContent.innerHTML = `
         <div class="card shadow-sm">
@@ -724,6 +779,7 @@ function renderEnrollment() {
                         <tbody id="enrollmentBody"><tr><td colspan="7" class="text-center">Memuat data...</td></tr></tbody>
                     </table>
                 </div>
+                <div id="enrollmentPagination"></div>
             </div>
         </div>
     `;
@@ -1147,7 +1203,7 @@ async function saveMahasiswa(id) {
     try {
         await fetchJson(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
         entityModal.hide();
-        renderMahasiswa();
+        renderMahasiswa(currentPage);
     } catch (error) {
         showAlert(error.message);
     }
@@ -1161,7 +1217,7 @@ async function saveDosen(id) {
     const body = { nip, nama, jurusan };
     const url = id ? `${apiUrl('dosen')}?id=${id}` : `${apiUrl('dosen')}`;
     const method = id ? 'PUT' : 'POST';
-    try { await fetchJson(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }); entityModal.hide(); renderDosen(); } catch (error) { showAlert(error.message); }
+    try { await fetchJson(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }); entityModal.hide(); renderDosen(currentPage); } catch (error) { showAlert(error.message); }
 }
 
 async function saveMatakuliah(id) {
@@ -1173,13 +1229,13 @@ async function saveMatakuliah(id) {
     const body = { kode_mk: kode, nama_mk: nama, sks, dosen_id: dosenId || null };
     const url = id ? `${apiUrl('matakuliah')}?id=${id}` : `${apiUrl('matakuliah')}`;
     const method = id ? 'PUT' : 'POST';
-    try { await fetchJson(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }); entityModal.hide(); renderMatakuliah(); } catch (error) { showAlert(error.message); }
+    try { await fetchJson(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }); entityModal.hide(); renderMatakuliah(currentPage); } catch (error) { showAlert(error.message); }
 }
 
 async function saveNilai(id) {
     const nilai = document.getElementById('entityNilai').value.trim();
     if (!nilai) return;
-    try { await fetchJson(`${apiUrl('enrollment')}?id=${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ nilai }) }); entityModal.hide(); renderNilai(); } catch (error) { showAlert(error.message); }
+    try { await fetchJson(`${apiUrl('enrollment')}?id=${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ nilai }) }); entityModal.hide(); renderNilai(currentPage); } catch (error) { showAlert(error.message); }
 }
 
 async function saveEnrollment() {
@@ -1192,26 +1248,26 @@ async function saveEnrollment() {
     try {
         await fetchJson(`${apiUrl('enrollment')}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
         entityModal.hide();
-        renderEnrollment();
+        renderEnrollment(currentPage);
     } catch (error) {
         showAlert(error.message);
     }
 }
 
 async function deleteMahasiswa(id) {
-    await deleteResource(id, 'mahasiswa', renderMahasiswa, 'Hapus mahasiswa ini?');
+    await deleteResource(id, 'mahasiswa', () => renderMahasiswa(currentPage), 'Hapus mahasiswa ini?');
 }
 
 async function deleteDosen(id) {
-    await deleteResource(id, 'dosen', renderDosen, 'Hapus dosen ini?');
+    await deleteResource(id, 'dosen', () => renderDosen(currentPage), 'Hapus dosen ini?');
 }
 
 async function deleteMatakuliah(id) {
-    await deleteResource(id, 'matakuliah', renderMatakuliah, 'Hapus matakuliah ini?');
+    await deleteResource(id, 'matakuliah', () => renderMatakuliah(currentPage), 'Hapus matakuliah ini?');
 }
 
 async function deleteNilai(id) {
-    await deleteResource(id, 'enrollment', renderNilai, 'Hapus data nilai ini?');
+    await deleteResource(id, 'enrollment', () => renderNilai(currentPage), 'Hapus data nilai ini?');
 }
 
 async function loadEnrollmentData() {
@@ -1223,7 +1279,9 @@ async function loadEnrollmentData() {
             tbody.innerHTML = '<tr><td colspan="7" class="text-center">Data enrollment kosong.</td></tr>';
             return;
         }
-        data.forEach(item => {
+
+        const paginated = paginateData(data, currentPage);
+        paginated.forEach(item => {
             tbody.innerHTML += `
                 <tr>
                     <td>${item.id || '-'}</td>
@@ -1236,6 +1294,7 @@ async function loadEnrollmentData() {
                 </tr>
             `;
         });
+        document.getElementById('enrollmentPagination').innerHTML = renderPaginationControl(data.length, 'renderEnrollment');
     } catch {
         showAlert('Gagal memuat data enrollment.');
     }
