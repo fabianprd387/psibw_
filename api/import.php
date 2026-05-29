@@ -102,6 +102,7 @@ function insert_matakuliah(array $row): array {
   $kode = $row['kode_mk'] ?? $row['kode'] ?? '';
   $nama = $row['nama_mk'] ?? $row['nama'] ?? '';
   $sks = $row['sks'] ?? '';
+  $semester = $row['semester'] ?? '';
   $dosenId = $row['dosen_id'] ?? '';
   $dosenNip = $row['dosen_nip'] ?? '';
 
@@ -130,11 +131,14 @@ function insert_matakuliah(array $row): array {
     }
   }
 
+  $semesterValue = ($semester !== '') ? (int)$semester : 'NULL';
+
   $sql = sprintf(
-    "INSERT INTO mata_kuliah (kode_mk, nama_mk, sks, dosen_id) VALUES ('%s', '%s', %d, %s)",
+    "INSERT INTO mata_kuliah (kode_mk, nama_mk, sks, semester, dosen_id) VALUES ('%s', '%s', %d, %s, %s)",
     escape($kode),
     escape($nama),
     (int) $sks,
+    $semesterValue,
     $dosenIdValue === 'NULL' ? 'NULL' : $dosenIdValue
   );
 
@@ -143,7 +147,6 @@ function insert_matakuliah(array $row): array {
   }
   return ['inserted' => true];
 }
-
 function insert_enrollment(array $row): array {
   global $conn;
   $nim = $row['nim'] ?? '';
