@@ -203,11 +203,30 @@ async function loadUserContext() {
 }
 
 function calculateAverage(values) {
-    const numbers = values
-        .map(value => Number(value))
-        .filter(value => !Number.isNaN(value));
-    if (!numbers.length) return null;
-    return (numbers.reduce((sum, value) => sum + value, 0) / numbers.length).toFixed(2);
+    const gradeWeights = {
+        'A': 4.0, 'A-': 3.7, 'B+': 3.3, 'B': 3.0, 'B-': 2.7,
+        'C+': 2.3, 'C': 2.0, 'D': 1.0, 'E': 0.0
+    };
+
+    const validGrades = values.filter(val => val in gradeWeights);
+    
+    if (validGrades.length === 0) return null;
+
+    const total = validGrades.reduce((sum, val) => sum + gradeWeights[val], 0);
+    const avg = total / validGrades.length;
+
+    let closestLetter = 'E';
+    let minDiff = Infinity;
+
+    for (const [letter, weight] of Object.entries(gradeWeights)) {
+        const diff = Math.abs(avg - weight);
+        if (diff < minDiff) {
+            minDiff = diff;
+            closestLetter = letter;
+        }
+    }
+
+    return `${avg.toFixed(2)} (${closestLetter})`;
 }
 
 function renderPaginationControl(totalItems, targetAction) {
