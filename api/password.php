@@ -26,8 +26,7 @@ if (!$isValid) {
   send_json(['error' => 'Password lama tidak cocok.'], 401);
 }
 
-$hash = password_hash($new, PASSWORD_DEFAULT);
-if (!mysqli_query($conn, "UPDATE users SET password = '$hash' WHERE username = '$username'")) {
+if (!mysqli_query($conn, "UPDATE users SET password = '$new' WHERE username = '$username'")) {
   send_json(['error' => mysqli_error($conn)], 500);
 }
 

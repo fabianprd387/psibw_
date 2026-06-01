@@ -16,7 +16,7 @@ function add_mahasiswa(): void {
     send_json(['error' => 'NIM sudah terdaftar.'], 409);
   }
 
-  ensure_user($nim, 'mahasiswa');
+  $generatedPassword = ensure_user($nim, 'mahasiswa');
 
   $angkatanValue = $angkatan !== '' ? (int) $angkatan : 'NULL';
   $query = sprintf(
@@ -33,5 +33,5 @@ function add_mahasiswa(): void {
 
   $lastId = mysqli_insert_id($conn);
   $student = query_fetch_one("SELECT id, nim, nama, jurusan, angkatan FROM mahasiswa WHERE id = $lastId");
-  send_json(['success' => true, 'mahasiswa' => $student], 201);
+  send_json(['success' => true, 'generated_password' => $generatedPassword, 'mahasiswa' => $student], 201);
 }

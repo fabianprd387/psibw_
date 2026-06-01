@@ -15,7 +15,7 @@ function add_dosen(): void {
     send_json(['error' => 'NIP sudah terdaftar.'], 409);
   }
 
-  ensure_user($nip, 'dosen');
+  $generatedPassword = ensure_user($nip, 'dosen');
 
   $sql = sprintf(
     "INSERT INTO dosen (nip, nama, jurusan) VALUES ('%s', '%s', '%s')",
@@ -30,5 +30,5 @@ function add_dosen(): void {
 
   $lastId = mysqli_insert_id($conn);
   $teacher = query_fetch_one("SELECT id, nip, nama, jurusan FROM dosen WHERE id = $lastId");
-  send_json(['success' => true, 'dosen' => $teacher], 201);
+  send_json(['success' => true, 'generated_password' => $generatedPassword, 'dosen' => $teacher], 201);
 }

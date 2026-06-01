@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/base.php';
+require_once __DIR__ . '/helpers.php';
 global $conn;
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -24,16 +24,6 @@ function normalize_row(array $row): array {
     $normalized[strtolower(trim((string) $key))] = trim((string) $value);
   }
   return $normalized;
-}
-
-function ensure_user(string $username, string $role): void {
-  global $conn;
-  $username = escape($username);
-  $userExists = query_fetch_one("SELECT id FROM users WHERE username = '$username'");
-  if (!$userExists) {
-    $hash = password_hash('password', PASSWORD_DEFAULT);
-    mysqli_query($conn, "INSERT INTO users (username, password, role) VALUES ('$username', '$hash', '$role')");
-  }
 }
 
 function insert_mahasiswa(array $row): array {

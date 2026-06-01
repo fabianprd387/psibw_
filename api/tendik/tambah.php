@@ -15,7 +15,7 @@ function add_tendik(): void {
     send_json(['error' => 'NIP sudah terdaftar.'], 409);
   }
 
-  ensure_user($nip, 'tendik');
+  $generatedPassword = ensure_user($nip, 'tendik');
 
   $sql = sprintf(
     "INSERT INTO tendik (nip, nama, jabatan) VALUES ('%s', '%s', '%s')",
@@ -30,5 +30,5 @@ function add_tendik(): void {
 
   $lastId = mysqli_insert_id($conn);
   $staff = query_fetch_one("SELECT id, nip, nama, jabatan FROM tendik WHERE id = $lastId");
-  send_json(['success' => true, 'tendik' => $staff], 201);
+  send_json(['success' => true, 'generated_password' => $generatedPassword, 'tendik' => $staff], 201);
 }
