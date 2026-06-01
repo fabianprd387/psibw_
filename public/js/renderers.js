@@ -690,27 +690,54 @@ async function renderProfile() {
         const avatarUrl = profile.photo_url || defaultAvatar;
         const showJurusan = profile.role === 'mahasiswa' || profile.role === 'dosen';
 
+        const roleDescription = profile.role === 'mahasiswa'
+            ? 'Profil Mahasiswa aktif di Sistem Informasi Akademik.'
+            : profile.role === 'dosen'
+                ? 'Profil Dosen dengan informasi jurusan dan identitas.'
+                : 'Profil Tenaga Kependidikan dan jabatan administratif.';
+
         mainContent.innerHTML = `
             <div class="row gy-4">
                 <div class="col-12 col-xl-7">
-                    <div class="card shadow-sm p-4">
+                    <div class="card shadow-sm p-4 profile-card">
                         <div class="profile-hero">
                             <div class="profile-avatar">
                                 <img src="${avatarUrl}" alt="Foto Profil">
                             </div>
                             <div class="profile-meta">
                                 <h2>${profile.name || profile.username}</h2>
-                                <p class="muted text-uppercase mb-1">${profile.role}</p>
+                                <span class="profile-role-badge">${profile.role}</span>
+                                <p class="profile-description mb-2">${roleDescription}</p>
                                 <p class="text-muted mb-0">${profile.label_id}: ${profile.id_value}</p>
                             </div>
                         </div>
-                        <div class="student-details">
-                            <dl>
-                                <dt>Username</dt><dd>${profile.username}</dd>
-                                ${showJurusan ? `<dt>Jurusan</dt><dd>${profile.jurusan || '-'}</dd>` : ''}
-                                ${profile.role === 'mahasiswa' ? `<dt>Angkatan</dt><dd>${profile.angkatan || '-'}</dd>` : ''}
-                                ${profile.role === 'tendik' ? `<dt>Jabatan</dt><dd>${profile.jabatan || '-'}</dd>` : ''}
-                            </dl>
+                        <div class="profile-summary-grid">
+                            <div class="profile-summary-card">
+                                <dt>Username</dt>
+                                <dd>${profile.username}</dd>
+                            </div>
+                            <div class="profile-summary-card">
+                                <dt>${profile.label_id}</dt>
+                                <dd>${profile.id_value}</dd>
+                            </div>
+                            ${showJurusan ? `
+                                <div class="profile-summary-card">
+                                    <dt>Jurusan</dt>
+                                    <dd>${profile.jurusan || '-'}</dd>
+                                </div>
+                            ` : ''}
+                            ${profile.role === 'mahasiswa' ? `
+                                <div class="profile-summary-card">
+                                    <dt>Angkatan</dt>
+                                    <dd>${profile.angkatan || '-'}</dd>
+                                </div>
+                            ` : ''}
+                            ${profile.role === 'tendik' ? `
+                                <div class="profile-summary-card">
+                                    <dt>Jabatan</dt>
+                                    <dd>${profile.jabatan || '-'}</dd>
+                                </div>
+                            ` : ''}
                         </div>
                     </div>
                 </div>
