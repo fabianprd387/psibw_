@@ -25,6 +25,11 @@ echo json_encode([
     'GET /api/profile.php?nim={nim}',
     'PUT /api/profile.php?nim={nim}',
     'POST /api/password.php',
+    'GET /api/tendik.php',
+    'GET /api/tendik.php?id={id}',
+    'POST /api/tendik.php',
+    'PUT /api/tendik.php?id={id}',
+    'DELETE /api/tendik.php?id={id}',
     'GET /api/laporan.php'
   ],
   'note' => 'Use Content-Type: application/json for POST/PUT bodies.',

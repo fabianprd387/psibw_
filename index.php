@@ -10,10 +10,19 @@ $path = trim($path, '/');
 
 if (str_starts_with($path, 'api/')) {
     $apiPath = substr($path, strlen('api/'));
-    $allowed = ['login', 'mahasiswa', 'dosen', 'matakuliah', 'enrollment', 'profile', 'password', 'laporan', 'import'];
-    $resource = explode('/', $apiPath)[0];
+    $segments = explode('/', trim($apiPath, '/'));
+    $resource = $segments[0] ?? '';
+    $allowed = ['login', 'mahasiswa', 'dosen', 'tendik', 'matakuliah', 'enrollment', 'profile', 'password', 'laporan', 'import'];
 
     if (in_array($resource, $allowed, true)) {
+        if (isset($segments[1])) {
+            $actionFile = __DIR__ . '/api/' . basename($resource) . '/' . basename($segments[1]) . '.php';
+            if (file_exists($actionFile)) {
+                require $actionFile;
+                exit;
+            }
+        }
+
         $apiFile = __DIR__ . '/api/' . basename($resource) . '.php';
         if (file_exists($apiFile)) {
             require $apiFile;
