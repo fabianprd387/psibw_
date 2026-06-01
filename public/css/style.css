@@ -126,15 +126,15 @@ body.bg-login main {
 
 .profile-hero {
     display: flex;
-    gap: 1.5rem;
-    align-items: center;
+    gap: 1rem;
+    align-items: flex-start;
     flex-wrap: wrap;
 }
 
 .profile-avatar {
-    width: 104px;
-    height: 104px;
-    border-radius: 24px;
+    width: 90px;
+    height: 90px;
+    border-radius: 18px;
     background: #eef4ff;
     display: grid;
     place-items: center;
@@ -149,58 +149,57 @@ body.bg-login main {
 }
 
 .profile-meta h2 {
-    margin: 0 0 0.35rem;
-    font-size: 1.85rem;
+    margin: 0 0 0.25rem;
+    font-size: 1.5rem;
     letter-spacing: -0.02em;
 }
 
 .profile-meta .muted,
 .profile-meta .profile-description {
     color: #6c757d;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.3rem;
 }
 
 .profile-role-badge {
     display: inline-flex;
     align-items: center;
-    gap: 0.35rem;
-    padding: 0.4rem 0.8rem;
+    gap: 0.25rem;
+    padding: 0.3rem 0.6rem;
     border-radius: 999px;
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.06em;
     color: #0d6efd;
     background: rgba(13, 110, 253, 0.1);
 }
 
 .profile-summary-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 1rem;
-    margin-top: 1.6rem;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 0.75rem;
 }
 
 .profile-summary-card {
-    padding: 1rem 1rem 0.95rem;
-    border-radius: 18px;
+    padding: 0.7rem;
+    border-radius: 14px;
     border: 1px solid #e2e8f0;
     background: #ffffff;
-    min-height: 88px;
+    min-height: 65px;
 }
 
 .profile-summary-card dt {
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     color: #6c757d;
     font-weight: 600;
-    margin-bottom: 0.35rem;
+    margin-bottom: 0.25rem;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.06em;
 }
 
 .profile-summary-card dd {
     margin: 0;
-    font-size: 0.97rem;
+    font-size: 0.9rem;
     color: #1f2937;
     font-weight: 700;
 }
@@ -209,66 +208,52 @@ body.bg-login main {
     overflow: hidden;
 }
 
-.profile-hero {
-    display: flex;
-    align-items: center;
-    gap: 1.4rem;
-    flex-wrap: wrap;
-}
-
-.profile-avatar {
-    width: 100px;
-    height: 100px;
-    border-radius: 22px;
-    background: #eef4ff;
-    display: grid;
-    place-items: center;
-    overflow: hidden;
-    flex-shrink: 0;
+.profile-actions .btn {
+    min-width: 140px;
 }
 
 .profile-action-panel {
-    border-radius: 18px;
+    border-radius: 12px;
 }
 
 @media (max-width: 991.98px) {
     .profile-action-panel {
-        padding: 1rem;
+        padding: 0.75rem;
     }
 }
 
 @media (max-width: 767.98px) {
     .profile-hero {
-        gap: 1rem;
-    }
-
-    .profile-avatar {
-        width: 86px;
-        height: 86px;
-    }
-
-    .profile-meta h2 {
-        font-size: 1.35rem;
-    }
-
-    .profile-summary-grid {
-        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
         gap: 0.75rem;
     }
 
+    .profile-avatar {
+        width: 75px;
+        height: 75px;
+    }
+
+    .profile-meta h2 {
+        font-size: 1.2rem;
+    }
+
+    .profile-summary-grid {
+        grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+        gap: 0.5rem;
+    }
+
     .profile-summary-card {
-        padding: 0.85rem;
-        min-height: 70px;
+        padding: 0.6rem;
+        min-height: 60px;
     }
 
-    .profile-action-panel .form-control,
+    .profile-action-panel .form-control-sm,
     .profile-action-panel .form-label {
-        font-size: 0.94rem;
+        font-size: 0.9rem;
     }
 
-    .profile-action-panel .btn {
-        font-size: 0.95rem;
-        padding: 0.55rem 0.95rem;
+    .profile-action-panel .btn-sm {
+        font-size: 0.85rem;
+        padding: 0.35rem 0.75rem;
     }
 
     .navbar .navbar-collapse {
@@ -276,7 +261,7 @@ body.bg-login main {
     }
 
     .navbar .nav-link {
-        padding: 0.45rem 0.75rem;
+        padding: 0.4rem 0.6rem;
     }
 }
 
