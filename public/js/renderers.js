@@ -742,7 +742,7 @@ async function renderProfile() {
                     </div>
                 </div>
                 <div class="col-12 col-xl-5">
-                    <div class="card shadow-sm p-4">
+                    <div class="card shadow-sm p-4 mb-4 profile-action-panel">
                         <h5 class="mb-3">Perbarui Profil</h5>
                         <form id="profileForm">
                             <div class="mb-3 text-center">
@@ -782,9 +782,7 @@ async function renderProfile() {
                         </form>
                         <div id="profileResult" class="mt-3"></div>
                     </div>
-                </div>
-                <div class="col-12">
-                    <div class="card shadow-sm p-4">
+                    <div class="card shadow-sm p-4 profile-action-panel">
                         <h5>Ubah Password</h5>
                         <form id="passwordForm">
                             <div class="mb-3">
@@ -799,7 +797,7 @@ async function renderProfile() {
                                 <label class="form-label">Konfirmasi Password Baru</label>
                                 <input type="password" class="form-control" id="confirmPassword" required>
                             </div>
-                            <button type="submit" class="btn btn-primary">Simpan Password Baru</button>
+                            <button type="submit" class="btn btn-primary w-100">Simpan Password Baru</button>
                         </form>
                         <div id="passwordResult" class="mt-3"></div>
                     </div>
