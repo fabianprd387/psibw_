@@ -697,9 +697,9 @@ async function renderProfile() {
                 : 'Tenaga Kependidikan';
 
         mainContent.innerHTML = `
-            <div class="row gy-3">
+            <div class="row g-2">
                 <div class="col-12 col-xl-7">
-                    <div class="card shadow-sm p-3 profile-card">
+                    <div class="card shadow-sm p-2 profile-card">
                         <div class="profile-hero">
                             <div class="profile-avatar">
                                 <img src="${avatarUrl}" alt="Foto Profil">
@@ -710,7 +710,7 @@ async function renderProfile() {
                                 <p class="text-muted mb-0 small">${profile.label_id}: ${profile.id_value}</p>
                             </div>
                         </div>
-                        <div class="profile-summary-grid mt-3">
+                        <div class="profile-summary-grid mt-2">
                             <div class="profile-summary-card">
                                 <dt>Username</dt>
                                 <dd>${profile.username}</dd>
@@ -741,64 +741,64 @@ async function renderProfile() {
                     </div>
                 </div>
                 <div class="col-12 col-xl-5">
-                    <div class="card shadow-sm p-3 mb-3 profile-action-panel">
-                        <h6 class="mb-2">Perbarui Profil</h6>
+                    <div class="card shadow-sm p-2 mb-2 profile-action-panel">
+                        <h6 class="mb-1">Perbarui Profil</h6>
                         <form id="profileForm">
-                            <div class="mb-2 text-center">
-                                <img src="${avatarUrl}" id="profilePreview" class="rounded-circle" width="80" height="80" style="object-fit: cover; display: inline-block;">
+                            <div class="mb-1 text-center">
+                                <img src="${avatarUrl}" id="profilePreview" class="rounded-circle" width="70" height="70" style="object-fit: cover; display: inline-block;">
                             </div>
-                            <div class="mb-2">
+                            <div class="mb-1">
                                 <label class="form-label small">Ubah Foto</label>
                                 <input type="file" accept="image/png, image/jpeg" class="form-control form-control-sm" id="profilePhoto">
                             </div>
-                            <div class="mb-2">
+                            <div class="mb-1">
                                 <label class="form-label small">Nama Lengkap</label>
                                 <input type="text" class="form-control form-control-sm" id="profileName" value="${profile.name || ''}" required>
                             </div>
                             ${profile.role === 'mahasiswa' ? `
-                                <div class="mb-2">
+                                <div class="mb-1">
                                     <label class="form-label small">Jurusan</label>
                                     <input type="text" class="form-control form-control-sm" id="profileJurusan" value="${profile.jurusan || ''}">
                                 </div>
-                                <div class="mb-2">
+                                <div class="mb-1">
                                     <label class="form-label small">Angkatan</label>
                                     <input type="number" class="form-control form-control-sm" id="profileAngkatan" value="${profile.angkatan || ''}">
                                 </div>
                             ` : ''}
                             ${profile.role === 'dosen' ? `
-                                <div class="mb-2">
+                                <div class="mb-1">
                                     <label class="form-label small">Jurusan</label>
                                     <input type="text" class="form-control form-control-sm" id="profileJurusan" value="${profile.jurusan || ''}">
                                 </div>
                             ` : ''}
                             ${profile.role === 'tendik' ? `
-                                <div class="mb-2">
+                                <div class="mb-1">
                                     <label class="form-label small">Jabatan</label>
                                     <input type="text" class="form-control form-control-sm" id="profileJabatan" value="${profile.jabatan || ''}">
                                 </div>
                             ` : ''}
                             <button type="submit" class="btn btn-primary btn-sm w-100">Simpan</button>
                         </form>
-                        <div id="profileResult" class="mt-2 small"></div>
+                        <div id="profileResult" class="mt-1 small"></div>
                     </div>
-                    <div class="card shadow-sm p-3 profile-action-panel">
-                        <h6 class="mb-2">Ubah Password</h6>
+                    <div class="card shadow-sm p-2 profile-action-panel">
+                        <h6 class="mb-1">Ubah Password</h6>
                         <form id="passwordForm">
-                            <div class="mb-2">
+                            <div class="mb-1">
                                 <label class="form-label small">Password Lama</label>
                                 <input type="password" class="form-control form-control-sm" id="currentPassword" required>
                             </div>
-                            <div class="mb-2">
+                            <div class="mb-1">
                                 <label class="form-label small">Password Baru</label>
                                 <input type="password" class="form-control form-control-sm" id="newPassword" required>
                             </div>
-                            <div class="mb-2">
+                            <div class="mb-1">
                                 <label class="form-label small">Konfirmasi Password</label>
                                 <input type="password" class="form-control form-control-sm" id="confirmPassword" required>
                             </div>
                             <button type="submit" class="btn btn-primary btn-sm w-100">Simpan</button>
                         </form>
-                        <div id="passwordResult" class="mt-2 small"></div>
+                        <div id="passwordResult" class="mt-1 small"></div>
                     </div>
                 </div>
             </div>

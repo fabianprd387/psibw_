@@ -126,15 +126,15 @@ body.bg-login main {
 
 .profile-hero {
     display: flex;
-    gap: 1rem;
+    gap: 0.75rem;
     align-items: flex-start;
     flex-wrap: wrap;
 }
 
 .profile-avatar {
-    width: 90px;
-    height: 90px;
-    border-radius: 18px;
+    width: 80px;
+    height: 80px;
+    border-radius: 16px;
     background: #eef4ff;
     display: grid;
     place-items: center;
@@ -149,57 +149,57 @@ body.bg-login main {
 }
 
 .profile-meta h2 {
-    margin: 0 0 0.25rem;
-    font-size: 1.5rem;
+    margin: 0 0 0.15rem;
+    font-size: 1.4rem;
     letter-spacing: -0.02em;
 }
 
 .profile-meta .muted,
 .profile-meta .profile-description {
     color: #6c757d;
-    margin-bottom: 0.3rem;
+    margin-bottom: 0.2rem;
 }
 
 .profile-role-badge {
     display: inline-flex;
     align-items: center;
-    gap: 0.25rem;
-    padding: 0.3rem 0.6rem;
+    gap: 0.2rem;
+    padding: 0.2rem 0.5rem;
     border-radius: 999px;
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.05em;
     color: #0d6efd;
     background: rgba(13, 110, 253, 0.1);
 }
 
 .profile-summary-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-    gap: 0.75rem;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 0.5rem;
 }
 
 .profile-summary-card {
-    padding: 0.7rem;
-    border-radius: 14px;
+    padding: 0.5rem;
+    border-radius: 12px;
     border: 1px solid #e2e8f0;
     background: #ffffff;
-    min-height: 65px;
+    min-height: 55px;
 }
 
 .profile-summary-card dt {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     color: #6c757d;
     font-weight: 600;
-    margin-bottom: 0.25rem;
+    margin-bottom: 0.15rem;
     text-transform: uppercase;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.05em;
 }
 
 .profile-summary-card dd {
     margin: 0;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     color: #1f2937;
     font-weight: 700;
 }
@@ -218,42 +218,42 @@ body.bg-login main {
 
 @media (max-width: 991.98px) {
     .profile-action-panel {
-        padding: 0.75rem;
+        padding: 0.5rem;
     }
 }
 
 @media (max-width: 767.98px) {
     .profile-hero {
-        gap: 0.75rem;
-    }
-
-    .profile-avatar {
-        width: 75px;
-        height: 75px;
-    }
-
-    .profile-meta h2 {
-        font-size: 1.2rem;
-    }
-
-    .profile-summary-grid {
-        grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
         gap: 0.5rem;
     }
 
+    .profile-avatar {
+        width: 70px;
+        height: 70px;
+    }
+
+    .profile-meta h2 {
+        font-size: 1.1rem;
+    }
+
+    .profile-summary-grid {
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+        gap: 0.4rem;
+    }
+
     .profile-summary-card {
-        padding: 0.6rem;
-        min-height: 60px;
+        padding: 0.4rem;
+        min-height: 50px;
     }
 
     .profile-action-panel .form-control-sm,
     .profile-action-panel .form-label {
-        font-size: 0.9rem;
+        font-size: 0.85rem;
     }
 
     .profile-action-panel .btn-sm {
-        font-size: 0.85rem;
-        padding: 0.35rem 0.75rem;
+        font-size: 0.8rem;
+        padding: 0.3rem 0.6rem;
     }
 
     .navbar .navbar-collapse {
@@ -261,7 +261,7 @@ body.bg-login main {
     }
 
     .navbar .nav-link {
-        padding: 0.4rem 0.6rem;
+        padding: 0.35rem 0.5rem;
     }
 }
 
