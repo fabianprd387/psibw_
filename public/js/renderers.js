@@ -56,6 +56,43 @@ function paginateData(data, page) {
     return data.slice(start, start + rowsPerPage);
 }
 
+function compressImage(file, maxWidth, maxHeight, quality) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = event => {
+            const img = new Image();
+            img.src = event.target.result;
+            img.onload = () => {
+                let width = img.width;
+                let height = img.height;
+
+                if (width > height) {
+                    if (width > maxWidth) {
+                        height = Math.round((height * maxWidth) / width);
+                        width = maxWidth;
+                    }
+                } else {
+                    if (height > maxHeight) {
+                        width = Math.round((width * maxHeight) / height);
+                        height = maxHeight;
+                    }
+                }
+
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                resolve(canvas.toDataURL('image/jpeg', quality));
+            };
+            img.onerror = error => reject(error);
+        };
+        reader.onerror = error => reject(error);
+    });
+}
+
 const renderers = {
     dashboard: renderDashboard,
     mahasiswa: renderMahasiswa,
@@ -642,7 +679,7 @@ function renderImport() {
         </div>
     `;
 
-    document.getElementById('importForm').addEventListener('submit', async function(e) {
+    document.getElementById('importForm').addEventListener('submit', async function (e) {
         e.preventDefault();
         const type = document.getElementById('importType').value;
         const fileInput = document.getElementById('importFile');
@@ -814,7 +851,7 @@ async function renderProfile() {
             reader.readAsDataURL(file);
         });
 
-        document.getElementById('profileForm').addEventListener('submit', async function(e) {
+        document.getElementById('profileForm').addEventListener('submit', async function (e) {
             e.preventDefault();
             const resultBox = document.getElementById('profileResult');
             resultBox.innerHTML = '';
@@ -832,7 +869,9 @@ async function renderProfile() {
                 body.jabatan = document.getElementById('profileJabatan').value.trim();
             }
             if (profilePhotoInput.files.length) {
-                try { body.photo_data = await readFileAsDataURL(profilePhotoInput.files[0]); } catch (error) {
+                try {
+                    body.photo_data = await compressImage(profilePhotoInput.files[0], 400, 400, 0.7);
+                } catch (error) {
                     resultBox.innerHTML = `<div class="alert alert-danger">${error.message}</div>`;
                     return;
                 }
@@ -858,7 +897,7 @@ async function renderProfile() {
             }
         });
 
-        document.getElementById('passwordForm').addEventListener('submit', async function(e) {
+        document.getElementById('passwordForm').addEventListener('submit', async function (e) {
             e.preventDefault();
             const currentPassword = document.getElementById('currentPassword').value;
             const newPassword = document.getElementById('newPassword').value;
