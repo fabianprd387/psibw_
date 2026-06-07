@@ -6,12 +6,26 @@ $id = isset($_GET['id']) ? (int) $_GET['id'] : null;
 $nim = isset($_GET['nim']) ? trim($_GET['nim']) : null;
 $dosenId = isset($_GET['dosen_id']) ? (int) $_GET['dosen_id'] : null;
 
+// Get current user info
+$currentUser = get_current_user();
+/** @var array{id: int, username: string, role: string}|null $currentUser */
+$myDosenId = null;
+if ($currentUser && $currentUser['role'] === 'dosen') {
+  $myDosenId = get_dosen_id_from_username($currentUser['username']);
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
   if ($id) {
     $record = query_fetch_one("SELECT e.id, m.nim, m.nama AS mahasiswa, mk.nama_mk, d.nama AS dosen, e.nilai, mk.dosen_id FROM enrollment e JOIN mahasiswa m ON e.mahasiswa_id = m.id JOIN mata_kuliah mk ON e.mata_kuliah_id = mk.id LEFT JOIN dosen d ON mk.dosen_id = d.id WHERE e.id = $id");
     if (!$record) {
       not_found('Enrollment tidak ditemukan.');
     }
+    
+    // Jika user adalah dosen, hanya bisa lihat enrollment untuk matkul miliknya
+    if ($myDosenId && (int)$record['dosen_id'] !== $myDosenId) {
+      not_found('Enrollment tidak ditemukan.');
+    }
+    
     send_json($record);
   }
 
@@ -23,6 +37,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
   if ($dosenId) {
     $conditions[] = "mk.dosen_id = $dosenId";
   }
+  
+  // Jika user adalah dosen, filter hanya untuk matkul miliknya
+  if ($myDosenId) {
+    $conditions[] = "mk.dosen_id = $myDosenId";
+  }
+  
   $where = count($conditions) ? 'WHERE ' . implode(' AND ', $conditions) : '';
 
   $records = query_fetch_all("SELECT e.id, m.nim, m.nama AS mahasiswa, mk.nama_mk, d.nama AS dosen, e.nilai, mk.dosen_id FROM enrollment e JOIN mahasiswa m ON e.mahasiswa_id = m.id JOIN mata_kuliah mk ON e.mata_kuliah_id = mk.id LEFT JOIN dosen d ON mk.dosen_id = d.id $where ORDER BY e.id DESC");
@@ -44,8 +64,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     not_found('Mahasiswa tidak ditemukan.');
   }
 
-  $course = query_fetch_one("SELECT id FROM mata_kuliah WHERE id = $mataKuliahId");
+  $course = query_fetch_one("SELECT id, dosen_id FROM mata_kuliah WHERE id = $mataKuliahId");
   if (!$course) {
+    not_found('Mata kuliah tidak ditemukan.');
+  }
+  
+  // Jika user adalah dosen, hanya bisa membuat enrollment untuk matkul miliknya
+  if ($myDosenId && (int)$course['dosen_id'] !== $myDosenId) {
     not_found('Mata kuliah tidak ditemukan.');
   }
 
@@ -76,8 +101,13 @@ if ($id === null) {
 
 if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
   $data = get_input();
-  $record = query_fetch_one("SELECT * FROM enrollment WHERE id = $id");
+  $record = query_fetch_one("SELECT e.*, mk.dosen_id FROM enrollment e JOIN mata_kuliah mk ON e.mata_kuliah_id = mk.id WHERE e.id = $id");
   if (!$record) {
+    not_found('Enrollment tidak ditemukan.');
+  }
+  
+  // Jika user adalah dosen, hanya bisa ubah enrollment untuk matkul miliknya
+  if ($myDosenId && (int)$record['dosen_id'] !== $myDosenId) {
     not_found('Enrollment tidak ditemukan.');
   }
 
@@ -96,8 +126,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
-  $record = query_fetch_one("SELECT * FROM enrollment WHERE id = $id");
+  $record = query_fetch_one("SELECT e.*, mk.dosen_id FROM enrollment e JOIN mata_kuliah mk ON e.mata_kuliah_id = mk.id WHERE e.id = $id");
   if (!$record) {
+    not_found('Enrollment tidak ditemukan.');
+  }
+  
+  // Jika user adalah dosen, hanya bisa hapus enrollment untuk matkul miliknya
+  if ($myDosenId && (int)$record['dosen_id'] !== $myDosenId) {
     not_found('Enrollment tidak ditemukan.');
   }
 

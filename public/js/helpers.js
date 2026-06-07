@@ -12,6 +12,13 @@ function apiUrl(path) {
 }
 
 function fetchJson(url, options = {}) {
+    const currentUser = JSON.parse(localStorage.getItem('siakadUser') || 'null');
+    if (!options.headers) {
+        options.headers = {};
+    }
+    if (currentUser && currentUser.username) {
+        options.headers['X-Username'] = currentUser.username;
+    }
     return fetch(url, options).then(async response => {
         const data = await response.json().catch(() => null);
         if (!response.ok) throw new Error(data?.error || 'Terjadi kesalahan API');

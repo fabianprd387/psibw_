@@ -5,12 +5,25 @@ global $conn;
 $id = isset($_GET['id']) ? (int) $_GET['id'] : null;
 $kode = isset($_GET['kode_mk']) ? trim($_GET['kode_mk']) : null;
 
+// Get current user info
+$currentUser = get_current_user();
+/** @var array{id: int, username: string, role: string}|null $currentUser */
+
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
   if ($id) {
     $course = query_fetch_one("SELECT m.id, m.kode_mk, m.nama_mk, m.sks, m.semester, m.dosen_id, d.nama AS dosen FROM mata_kuliah m LEFT JOIN dosen d ON m.dosen_id = d.id WHERE m.id = $id");
     if (!$course) {
       not_found('Matakuliah tidak ditemukan.');
     }
+    
+    // Jika user adalah dosen, hanya bisa lihat matkul miliknya sendiri
+    if ($currentUser && $currentUser['role'] === 'dosen') {
+      $myDosenId = get_dosen_id_from_username($currentUser['username']);
+      if ($myDosenId && (int)$course['dosen_id'] !== $myDosenId) {
+        not_found('Matakuliah tidak ditemukan.');
+      }
+    }
+    
     send_json($course);
   }
   if ($kode) {
@@ -19,9 +32,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     if (!$course) {
       not_found('Matakuliah tidak ditemukan.');
     }
+    
+    // Jika user adalah dosen, hanya bisa lihat matkul miliknya sendiri
+    if ($currentUser && $currentUser['role'] === 'dosen') {
+      $myDosenId = get_dosen_id_from_username($currentUser['username']);
+      if ($myDosenId && (int)$course['dosen_id'] !== $myDosenId) {
+        not_found('Matakuliah tidak ditemukan.');
+      }
+    }
+    
     send_json($course);
   }
-  $courses = query_fetch_all('SELECT m.id, m.kode_mk, m.nama_mk, m.sks, m.semester, m.dosen_id, d.nama AS dosen FROM mata_kuliah m LEFT JOIN dosen d ON m.dosen_id = d.id ORDER BY m.id DESC');
+  
+  // List all courses - filter untuk dosen hanya melihat milik mereka
+  $sql = 'SELECT m.id, m.kode_mk, m.nama_mk, m.sks, m.semester, m.dosen_id, d.nama AS dosen FROM mata_kuliah m LEFT JOIN dosen d ON m.dosen_id = d.id';
+  
+  if ($currentUser && $currentUser['role'] === 'dosen') {
+    $myDosenId = get_dosen_id_from_username($currentUser['username']);
+    if ($myDosenId) {
+      $sql .= " WHERE m.dosen_id = $myDosenId";
+    }
+  }
+  
+  $sql .= ' ORDER BY m.id DESC';
+  $courses = query_fetch_all($sql);
   send_json($courses);
 }
 
@@ -40,6 +74,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $exists = query_fetch_one("SELECT id FROM mata_kuliah WHERE kode_mk = '" . escape($kode) . "'");
   if ($exists) {
     send_json(['error' => 'Kode matakuliah sudah terdaftar.'], 409);
+  }
+
+  // Jika user adalah dosen, set otomatis ke dosen mereka dan jangan izinkan ubah
+  if ($currentUser && $currentUser['role'] === 'dosen') {
+    $dosenId = get_dosen_id_from_username($currentUser['username']);
   }
 
   if ($dosenId) {
@@ -78,6 +117,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
   $course = query_fetch_one("SELECT * FROM mata_kuliah WHERE id = $id");
   if (!$course) {
     not_found('Matakuliah tidak ditemukan.');
+  }
+  
+  // Jika user adalah dosen, hanya bisa edit matkul miliknya
+  if ($currentUser && $currentUser['role'] === 'dosen') {
+    $myDosenId = get_dosen_id_from_username($currentUser['username']);
+    if ($myDosenId && (int)$course['dosen_id'] !== $myDosenId) {
+      not_found('Matakuliah tidak ditemukan.');
+    }
   }
 
   $kode = trim($data['kode_mk'] ?? $course['kode_mk']);
@@ -128,6 +175,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
   $course = query_fetch_one("SELECT * FROM mata_kuliah WHERE id = $id");
   if (!$course) {
     not_found('Matakuliah tidak ditemukan.');
+  }
+  
+  // Jika user adalah dosen, hanya bisa hapus matkul miliknya
+  if ($currentUser && $currentUser['role'] === 'dosen') {
+    $myDosenId = get_dosen_id_from_username($currentUser['username']);
+    if ($myDosenId && (int)$course['dosen_id'] !== $myDosenId) {
+      not_found('Matakuliah tidak ditemukan.');
+    }
   }
 
   mysqli_query($conn, "DELETE FROM mata_kuliah WHERE id = $id");

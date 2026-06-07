@@ -68,3 +68,20 @@ function method_not_allowed(array $allowed) {
 function not_found($message = 'Resource not found.') {
   send_json(['error' => $message], 404);
 }
+
+function get_current_user(): ?array {
+  $username = $_SERVER['HTTP_X_USERNAME'] ?? null;
+  if (!$username) {
+    return null;
+  }
+  
+  $username = escape($username);
+  $user = query_fetch_one("SELECT id, username, role FROM users WHERE username = '$username' LIMIT 1");
+  return $user;
+}
+
+function get_dosen_id_from_username(string $username): ?int {
+  $username = escape($username);
+  $dosen = query_fetch_one("SELECT id FROM dosen WHERE nip = '$username'");
+  return $dosen ? (int)$dosen['id'] : null;
+}
