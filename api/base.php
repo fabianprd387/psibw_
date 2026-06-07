@@ -1,7 +1,7 @@
 <?php
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Username');
+header('Access-Control-Allow-Headers: Content-Type, Authorization');
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
   http_response_code(204);
   exit;
@@ -67,21 +67,4 @@ function method_not_allowed(array $allowed) {
 
 function not_found($message = 'Resource not found.') {
   send_json(['error' => $message], 404);
-}
-
-function get_current_user(): ?array {
-  $username = $_SERVER['HTTP_X_USERNAME'] ?? null;
-  if (!$username) {
-    return null;
-  }
-  
-  $username = escape($username);
-  $user = query_fetch_one("SELECT id, username, role FROM users WHERE username = '$username' LIMIT 1");
-  return $user;
-}
-
-function get_dosen_id_from_username(string $username): ?int {
-  $username = escape($username);
-  $dosen = query_fetch_one("SELECT id FROM dosen WHERE nip = '$username'");
-  return $dosen ? (int)$dosen['id'] : null;
 }
