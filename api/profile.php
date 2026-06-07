@@ -93,7 +93,7 @@ function save_profile_photo(string $username, string $photoData): ?string {
     return null;
   }
 
-  return 'uploads/' . $filename;
+  return 'public/uploads/' . $filename;
 }
 
 $profile = build_profile($user);
